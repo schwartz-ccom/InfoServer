@@ -1,6 +1,10 @@
 package server.ui;
 
+import client.data.ScreenImager;
 import res.Out;
+import server.data.Computer;
+import server.data.DataHandler;
+import server.resources.Subscriber;
 import server.ui.components.ComputerList;
 
 import javax.swing.*;
@@ -13,10 +17,10 @@ import java.util.Objects;
  * This is set up as a singleton, because there should only
  * be on UI frame running / only one instance of the UI
  */
-public class App {
+public class App implements Subscriber {
 
     private JFrame frm;
-
+    private JLabel lblName;
     private static App instance;
 
     public static App getInstance() {
@@ -46,6 +50,10 @@ public class App {
         // Create the scrollable / draggable computer interface
         frm.add( new ComputerList(), BorderLayout.NORTH );
 
+        DataHandler.getInstance().subscribe( this );
+        lblName = new JLabel( "Name of computer selected: " );
+
+        frm.add( lblName, BorderLayout.CENTER );
         frm.setVisible( true );
         frm.repaint();
         frm.revalidate();
@@ -59,5 +67,10 @@ public class App {
      */
     public JFrame getUI() {
         return Objects.requireNonNullElseGet( frm, JFrame::new );
+    }
+
+    @Override
+    public void update( Computer data ) {
+        lblName.setText( "Name of computer selected: " + data );
     }
 }

@@ -1,5 +1,7 @@
 package server.ui.components;
 
+import server.data.Computer;
+
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
@@ -55,7 +57,7 @@ public class ComputerList extends JPanel {
 
     public void addComputer( String computerName ) {
         // Create a computer icon / entity
-        Computer c = new Computer( computerName );
+        Computer c = new Computer( computerName, "IP HERE" );
         c.addMouseListener( ma );
         c.addMouseMotionListener( ma );
         // Add it to our list of tracked computers in case we need to access them
