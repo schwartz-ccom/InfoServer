@@ -1,6 +1,6 @@
 package server.data;
 
-import server.resources.Subscriber;
+import server.resources.ComputerSubscriber;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +11,7 @@ public class DataHandler {
     private Computer currentComputer;
 
     // The list of classes that are dependent on the current Computer
-    private List< Subscriber > subscribers = new ArrayList<>();
+    private List< ComputerSubscriber > subscribers;
 
     private static DataHandler instance;
     public static DataHandler getInstance(){
@@ -21,7 +21,7 @@ public class DataHandler {
     }
 
     private DataHandler(){
-
+        subscribers = new ArrayList<>();
     }
 
     void setCurrentComputer( Computer c ){
@@ -35,18 +35,18 @@ public class DataHandler {
         // Alert any elements that are subscribed to this data
         alertSubscribers();
     }
-    public void subscribe( Subscriber sub ){
+    public void subscribe( ComputerSubscriber sub ){
         subscribers.add( sub );
     }
-    public boolean unsubscribe( Subscriber sub ){
+    public boolean unsubscribe( ComputerSubscriber sub ){
         return subscribers.remove( sub );
     }
     private void alertSubscribers(){
 
         // Go through the list of subscribers and tell them to update their data with
         // the current computer
-        for ( Subscriber sub: subscribers )
-            sub.update( currentComputer );
+        for ( ComputerSubscriber sub: subscribers )
+            sub.updateComputer( currentComputer );
     }
 
     public Computer getCurrentComputer(){

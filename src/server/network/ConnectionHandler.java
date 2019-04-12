@@ -1,7 +1,7 @@
 package server.network;
 
 import server.data.Computer;
-import server.resources.Subscriber;
+import server.resources.ComputerSubscriber;
 
 /**
  * The top level networking part.
@@ -22,7 +22,7 @@ import server.resources.Subscriber;
  * As I write that, it seems like it would waste cpu cycles, so I'll have to implement a state
  * machine that re-enables the client when it gets told to wake up.
  */
-public class ConnectionHandler extends Thread implements Subscriber {
+public class ConnectionHandler extends Thread implements ComputerSubscriber {
 
     private boolean isConnected = false;
 
@@ -42,7 +42,7 @@ public class ConnectionHandler extends Thread implements Subscriber {
     }
     // Update the connection's IP address and retry connection
     @Override
-    public void update( Computer data ) {
+    public void updateComputer( Computer data ) {
         this.kill();
         new ConnectionHandler( data.getIP() );
     }

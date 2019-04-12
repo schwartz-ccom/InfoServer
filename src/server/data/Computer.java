@@ -1,7 +1,5 @@
 package server.data;
 
-import server.network.ConnectionHandler;
-
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
@@ -104,5 +102,20 @@ public class Computer extends JLabel {
     @Override
     public String toString(){
         return getComputerName();
+    }
+    private void test(){
+
+        Macro m = new Macro( "Test Macro");
+        m.addAction( "MOUSE MOVE 100" );
+        m.addAction( "MOUSE PRESS 1" );
+        m.addAction( "MOUSE PRESS 2" );
+        m.addAction( "DELAY 1000" );
+        m.addAction( "MOUSE MOVE 120 120" );
+        m.addAction( "MOUSE PRESS 1" );
+        m.addAction( "RUN gedit" );
+        m.addAction( "MOUSE MOVE 300 300" );
+
+
+        m.start();
     }
 }
