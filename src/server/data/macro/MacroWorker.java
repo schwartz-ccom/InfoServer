@@ -1,96 +1,25 @@
-package server.data;
+package server.data.macro;
 
 import res.Out;
 
 import java.awt.*;
 import java.awt.event.InputEvent;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
- * Gives the user a way to play out events on a foreign ( non host ) computer
- * Commands are limited, but that's intentional for now, since I don't see
- * much use in expanding those.
+ * This handles the legitimate brute work of the macro.
+ * It's in another class so that it can be recycled
  */
-public class Macro extends Thread {
+public class MacroWorker extends Thread {
 
-    // Private things needed all over the class.
     private String classId = this.getClass().getSimpleName();
     private List< String > events;
-    private String myName;
-
     // Responsible for actually carrying out the actions.
     private Robot r;
 
-    /**
-     * Constructor of the Macro.
-     * Just initializes the list.
-     */
-    public Macro( String macroName ) {
-        this.myName = macroName;
-        events = new ArrayList<>();
+    MacroWorker( List< String > events ){
+        this.events = events;
     }
-
-    /**
-     * Gives the name of the macro so users can identify what the macro is.
-     *
-     * @return The macro name as String
-     */
-    public String getMacroName() {
-        return this.myName;
-    }
-
-    /**
-     * Get the macro steps.
-     * Useful when editing / viewing
-     *
-     * @return The macro steps as String[]
-     */
-    public String[] getMacroSteps() {
-        String [] toRet = new String[ events.size() ];
-
-        for ( int x = 0; x < events.size(); x++ ){
-            toRet[ x ] = events.get( x );
-        }
-        return toRet;
-    }
-
-    /**
-     * Modifies a certain step in the macro, so that users don't have to retype the entire
-     * macro.
-     *
-     * @param stepNumber     The step to edit as int. Step 1 is the 0th slot in the macro, so decrement by 1
-     * @param modifiedAction The action to replace the step as String
-     */
-    public void modifyStep( int stepNumber, String modifiedAction ) {
-        if ( stepNumber >= events.size() )
-            events.add( modifiedAction );
-        else
-            events.set( stepNumber, modifiedAction );
-    }
-
-
-    /**
-     * Adds and action to the macro. Valid actions are currently written on a sticky
-     * note at my desk, but I'll get proper documentation on it when I implement the
-     * macro builder / computer hotkey action builder.
-     *
-     * @param cmd The macro command to add as String
-     */
-    public void addAction( String cmd ) {
-        events.add( cmd );
-    }
-
-    /**
-     * If the user just wants to create a general Macro, s/he can save it.
-     * The save function which hasn't been implemented as of right now stores this in
-     * DataHandler.
-     */
-    public void saveMacro() {
-        MacroHandler.getInstance().addMacroToCollection( this );
-    }
-
     /**
      * Inherited from Thread, this starts execution of the macro.
      */
@@ -106,8 +35,8 @@ public class Macro extends Thread {
         // For the sake of readability, a lot of the value processing is done in the methods
         //    so that we aren't converting Strings to ints in the actual switch statement.
         // It would be a nightmare to read, and this allows for error checking.
-        for ( String cmd : events ) {
 
+        for ( String cmd : events ) {
             // Split the command into parts based on the space character, and then use:
             // parts[ 0 ] as primary command ( mouse, key, run, type, delay )
             // parts[ 1 ] as secondary ( mouse press, mouse move ), or as the data
@@ -121,7 +50,7 @@ public class Macro extends Thread {
                                 throwError( "You forgot a value" );
                             else
                                 move( parts[ 2 ], parts[ 3 ] );
-                            return;
+                            break;
                         case "press":
                             pressMouse( parts[ 2 ] );
                             break;
@@ -150,8 +79,8 @@ public class Macro extends Thread {
     /**
      * Move the mouse to a certain location on the screen
      *
-     * @param x the X coordinate as String. Converted to integer.
-     * @param y the Y coordinate as String. Converted to integer.
+     * @param x coordinate as String. Converted to integer.
+     * @param y coordinate as String. Converted to integer.
      */
     private void move( String x, String y ) {
         try {
@@ -263,17 +192,5 @@ public class Macro extends Thread {
      */
     private void throwError( String mes ) {
         Out.printError( classId, mes );
-    }
-
-    public String toString(){
-        StringBuilder sb = new StringBuilder();
-        sb.append( getMacroName() );
-        sb.append( " events:\n"  );
-
-        for ( String s: events ){
-            sb.append( s );
-            sb.append( "\n" );
-        }
-        return ( sb.toString() );
     }
 }

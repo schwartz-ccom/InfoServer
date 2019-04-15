@@ -1,5 +1,7 @@
 package server.data;
 
+import server.data.macro.Macro;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
@@ -116,6 +118,6 @@ public class Computer extends JLabel {
         m.addAction( "MOUSE MOVE 300 300" );
 
 
-        m.start();
+        m.runMacro();
     }
 }

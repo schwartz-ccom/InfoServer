@@ -1,8 +1,9 @@
-package server.data;
+package server.data.macro;
 
 import res.Out;
 import server.resources.MacroSubscriber;
 
+import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,7 +19,7 @@ public class MacroHandler {
     // The list of classes that are dependent on the macros
     private List< MacroSubscriber > subscribers = new ArrayList<>();
 
-    // Singleton, so only use one instace
+    // Singleton, so only use one instance
     private static MacroHandler instance;
 
     public static MacroHandler getInstance() {
@@ -40,26 +41,49 @@ public class MacroHandler {
         return null;
     }
     public void addMacroToCollection( Macro m ) {
-
-        macros.add( m );
+        if ( isInCollection( m.getMacroName() ) )
+            changeMacroInCollection( m.getMacroName(), m.getMacroSteps() );
+        else
+            macros.add( m );
 
         // Alert any elements that are subscribed to this data
         alertSubscribers();
     }
 
-    public void changeMacroInCollection( String name, String[] steps ) {
-
-        for ( int place = 0; place < macros.size(); place++ ){
-            if ( macros.get( place ).getMacroName().equals( name ) ){
+    private void changeMacroInCollection( String name, String[] steps ) {
+        for ( Macro m: macros ) {
+            if ( m.getMacroName().equals( name ) ) {
                 int p = 0;
-                for ( String s: steps ) {
-                    macros.get( place ).modifyStep( p++, s );
-                }
+                for ( String s : steps )
+                    m.modifyStep( p++, s );
                 alertSubscribers();
                 return;
             }
         }
+    }
 
+    private boolean isInCollection( String name ){
+        for ( Macro m: macros ){
+            if ( m.getMacroName().equals( name ) )
+                return true;
+        }
+        return false;
+    }
+
+    public void saveAllToFile(){
+        JFileChooser fc = new JFileChooser( System.getProperty( "user.home" ) );
+        fc.setDialogType( JFileChooser.SAVE_DIALOG );
+
+        int exitStatus = fc.showSaveDialog( null );
+        if ( exitStatus == JFileChooser.APPROVE_OPTION ){
+
+            Macro[] toSave = new Macro[ macros.size() ];
+
+            for ( int place = 0; place < macros.size(); place ++ )
+                toSave[ place ] = macros.get( place );
+
+            MacroFileHandler.saveMacrosToFile( fc.getSelectedFile(), toSave );
+        }
     }
 
     public void subscribe( MacroSubscriber sub ) {

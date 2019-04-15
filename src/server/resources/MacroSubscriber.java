@@ -1,6 +1,6 @@
 package server.resources;
 
-import server.data.Macro;
+import server.data.macro.Macro;
 
 /**
  * A simple, simple interface to allow other classes to listen to any changes in data,
