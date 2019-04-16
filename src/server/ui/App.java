@@ -3,6 +3,7 @@ package server.ui;
 import res.Out;
 import server.data.Computer;
 import server.data.DataHandler;
+import server.data.MousePositionHandler;
 import server.data.macro.MacroHandler;
 import server.resources.ComputerSubscriber;
 import server.data.macro.Macro;
@@ -27,6 +28,7 @@ public class App implements ComputerSubscriber, MacroSubscriber {
 
     private JComboBox< String > cbxMacros;
     private JLabel lblName;
+    private JLabel lblMousePosition;
     private static App instance;
 
     public static App getInstance() {
@@ -36,6 +38,11 @@ public class App implements ComputerSubscriber, MacroSubscriber {
     }
 
     private App() {
+        // Create the MousePositionHandler for showing the mouse location in the macroPane
+        Toolkit.getDefaultToolkit().addAWTEventListener(
+                new MousePositionHandler(),
+                AWTEvent.MOUSE_EVENT_MASK );
+
         // Subscribe to both of the data senders
         DataHandler.getInstance().subscribe( this );
         MacroHandler.getInstance().subscribe( this );
@@ -71,6 +78,9 @@ public class App implements ComputerSubscriber, MacroSubscriber {
         mnMacro.add( mniCreateMacro );
         mbMenu.add( mnMacro );
 
+        // Create a mouse position follower so that it's easier to create macros
+        lblMousePosition = new JLabel( "Current mouse x,y: 0, 0" );
+
         // Initiate a very important box
         cbxMacros = new JComboBox<>();
         cbxMacros.addItem( "Choose a Macro" );
@@ -95,9 +105,10 @@ public class App implements ComputerSubscriber, MacroSubscriber {
         frm.revalidate();
     }
 
-    private void showMacroPane( ){
+    private void showMacroPane() {
         showMacroPane( 0, "", null );
     }
+
     /**
      * Shows the macro creation pane from the MenuItem with bits filled in
      */
@@ -126,8 +137,8 @@ public class App implements ComputerSubscriber, MacroSubscriber {
         txtMacroEditor.setWrapStyleWord( true );
 
         // Fill the edit macro area with whatever was passed
-        if ( body != null ){
-            for ( String step: body ){
+        if ( body != null ) {
+            for ( String step : body ) {
                 txtMacroEditor.append( step );
                 txtMacroEditor.append( "\n" );
             }
@@ -147,7 +158,7 @@ public class App implements ComputerSubscriber, MacroSubscriber {
 
 
         // Wrap them all up into an object
-        Object[] uiElements = { lblName, txtName, lblEditor, sp, btnShowCommands };
+        Object[] uiElements = { lblName, txtName, lblEditor, sp, lblMousePosition, btnShowCommands };
 
         // Of course, gotta have the correct title on the object to not confuse anyone
         String frmTitle = "Create a macro";
@@ -184,13 +195,14 @@ public class App implements ComputerSubscriber, MacroSubscriber {
         }
     }
 
-    private void showMacroHelp(){
+    private void showMacroHelp() {
         String help = "MOUSE MOVE [ x_coordinate ] [ y_coordinate ]\n" +
                 "MOUSE PRESS [ mouse_button ]\n" +
                 "KEY PRESS [ key_code ]\n" +
                 "TYPE [ string_to_type ]\n" +
                 "RUN [ path_as_string ]\n" +
-                "DELAY [ time_in_milliseconds ]\n\n" +
+                "DELAY [ time_in_milliseconds ]\n" +
+                "REPEAT [ times_to_repeat_macro ]\n\n" +
                 "Note: These are in caps, but the commands are not\n" +
                 "case sensitive. That being said, you should probably adopt\n" +
                 "a style and either go full upper or lower case.";
@@ -242,7 +254,7 @@ public class App implements ComputerSubscriber, MacroSubscriber {
         cbxMacros.removeAllItems();
         cbxMacros.addItem( "Choose a Macro" );
 
-        for ( Macro m: macros ) {
+        for ( Macro m : macros ) {
             JMenuItem temp = new JMenuItem( m.getMacroName() );
             temp.addActionListener( actionEvent -> {
                 Object[] btnLabels = { "Run", "Edit", "Close" };
@@ -265,5 +277,10 @@ public class App implements ComputerSubscriber, MacroSubscriber {
             mnMacro.add( temp );
             cbxMacros.addItem( m.getMacroName() );
         }
+    }
+
+    public void updateMousePosition( int x, int y ) {
+        lblMousePosition.setText( "Current mouse x,y: " + x + ", " + y );
+        lblMousePosition.repaint();
     }
 }

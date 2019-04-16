@@ -4,6 +4,7 @@ import res.Out;
 
 import java.awt.*;
 import java.awt.event.InputEvent;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -13,12 +14,12 @@ import java.util.List;
 public class MacroWorker extends Thread {
 
     private String classId = this.getClass().getSimpleName();
-    private List< String > events;
+    private List< String > eventList;
     // Responsible for actually carrying out the actions.
     private Robot r;
 
     MacroWorker( List< String > events ){
-        this.events = events;
+        this.eventList = events;
     }
     /**
      * Inherited from Thread, this starts execution of the macro.
@@ -32,46 +33,59 @@ public class MacroWorker extends Thread {
             Out.printError( classId, "Error starting Robot: " + e.getMessage() );
         }
 
+        int repeat = 1;
+
         // For the sake of readability, a lot of the value processing is done in the methods
         //    so that we aren't converting Strings to ints in the actual switch statement.
         // It would be a nightmare to read, and this allows for error checking.
+        for ( int x = 0; x < repeat; x++ ) {
 
-        for ( String cmd : events ) {
-            // Split the command into parts based on the space character, and then use:
-            // parts[ 0 ] as primary command ( mouse, key, run, type, delay )
-            // parts[ 1 ] as secondary ( mouse press, mouse move ), or as the data
-            // parts[ 2 ] and parts[ 3 ] is always data
-            String[] parts = cmd.split( " ", -1 );
-            switch ( parts[ 0 ].toLowerCase() ) {
-                case "mouse":
-                    switch ( parts[ 1 ].toLowerCase() ) {
-                        case "move":
-                            if ( parts.length < 4 )
-                                throwError( "You forgot a value" );
-                            else
-                                move( parts[ 2 ], parts[ 3 ] );
-                            break;
-                        case "press":
-                            pressMouse( parts[ 2 ] );
-                            break;
-                        default:
-                            throwError( "Unknown secondary command: " + parts[ 1 ] );
-                            break;
-                    }
-                case "key":
-                    pressKey( parts[ 2 ] );
-                    break;
-                case "type":
-                    type( parts[ 1 ] );
-                    break;
-                case "run":
-                    run( parts[ 1 ] );
-                    break;
-                case "delay":
-                    delay( parts[ 1 ] );
-                    break;
-                default:
-                    throwError( "Unknown primary command: " + parts[ 0 ] );
+            // Use another list because we modify the events list when we receive a repeat() command
+            // and Java does not allow that ( co modification )
+            List< String > eventsChecked = new ArrayList<>( this.eventList );
+
+            for ( String cmd : eventsChecked ) {
+                // Split the command into parts based on the space character, and then use:
+                // parts[ 0 ] as primary command ( mouse, key, run, type, delay )
+                // parts[ 1 ] as secondary ( mouse press, mouse move ), or as the data
+                // parts[ 2 ] and parts[ 3 ] is always data
+                String[] parts = cmd.split( " ", -1 );
+                switch ( parts[ 0 ].toLowerCase() ) {
+                    case "mouse":
+                        switch ( parts[ 1 ].toLowerCase() ) {
+                            case "move":
+                                if ( parts.length < 4 )
+                                    throwError( "You forgot a value" );
+                                else
+                                    move( parts[ 2 ], parts[ 3 ] );
+                                break;
+                            case "press":
+                                pressMouse( parts[ 2 ] );
+                                break;
+                            default:
+                                throwError( "Unknown secondary command: " + parts[ 1 ] );
+                                break;
+                        }
+                        break;
+                    case "key":
+                        pressKey( parts[ 2 ] );
+                        break;
+                    case "type":
+                        type( parts[ 1 ] );
+                        break;
+                    case "repeat":
+                        repeat += Integer.valueOf( parts[ 1 ] );
+                        this.eventList.remove( cmd );
+                        break;
+                    case "run":
+                        run( parts[ 1 ] );
+                        break;
+                    case "delay":
+                        delay( parts[ 1 ] );
+                        break;
+                    default:
+                        throwError( "Unknown primary command: " + parts[ 0 ] );
+                }
             }
         }
     }

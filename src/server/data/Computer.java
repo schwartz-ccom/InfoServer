@@ -20,11 +20,11 @@ public class Computer extends JLabel {
     // Declare the two borders to use when selecting / un-selecting
     private Border unselectedBorder = BorderFactory.createCompoundBorder(
             BorderFactory.createEmptyBorder(),
-            BorderFactory.createEmptyBorder( 4,4,4,4 ) );
+            BorderFactory.createEmptyBorder( 4, 4, 4, 4 ) );
 
     private Border selectedBorder = BorderFactory.createCompoundBorder(
             BorderFactory.createEtchedBorder(),
-            BorderFactory.createEmptyBorder( 2,2,2,2 ) );
+            BorderFactory.createEmptyBorder( 2, 2, 2, 2 ) );
 
     // Data variables for the computer
     private String name;
@@ -67,23 +67,22 @@ public class Computer extends JLabel {
         } );
     }
 
-    public void updateInformation( Map< String, String > info ){
+    public void updateInformation( Map< String, String > info ) {
 
     }
 
-    public String getIP(){
+    public String getIP() {
         return this.ip;
     }
 
     /**
-     *
      * @param command The hot key action to run as string
      */
-    public void setHotkeyAction( String command ){
+    public void setHotkeyAction( String command ) {
 
     }
 
-    public String getComputerName(){
+    public String getComputerName() {
         return this.name;
     }
 
@@ -94,20 +93,22 @@ public class Computer extends JLabel {
     // Purely display methods. Just puts a border around the currently selected computer.
     // Both called by DataHandler. These belong here since this class handles the UI look
     // as well as Data
-    void select(){
+    void select() {
         this.setBorder( selectedBorder );
     }
-    void unselect(){
+
+    void unselect() {
         this.setBorder( unselectedBorder );
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return getComputerName();
     }
-    private void test(){
 
-        Macro m = new Macro( "Test Macro");
+    private void test() {
+
+        Macro m = new Macro( "Test Macro" );
         m.addAction( "MOUSE MOVE 100" );
         m.addAction( "MOUSE PRESS 1" );
         m.addAction( "MOUSE PRESS 2" );
