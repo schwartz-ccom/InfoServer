@@ -4,7 +4,7 @@ import server.data.Computer;
 import server.data.DataHandler;
 import server.data.macro.Macro;
 import server.data.macro.MacroHandler;
-import server.network.ConnectionHandler;
+import server.network.NetworkHandler;
 import server.resources.ComputerSubscriber;
 import server.resources.MacroSubscriber;
 import server.resources.NetworkSubscriber;
@@ -17,12 +17,11 @@ import java.awt.*;
 
 public class StatusBar extends JLabel implements ComputerSubscriber, MacroSubscriber, NetworkSubscriber {
 
-    private String txt = "";
     private String cMes, mMes, sMes;
 
     public StatusBar(){
         super();
-        ConnectionHandler.getInstance().subscribe( this );
+        NetworkHandler.getInstance().subscribe( this );
         MacroHandler.getInstance().subscribe( this );
         DataHandler.getInstance().subscribe( this );
 

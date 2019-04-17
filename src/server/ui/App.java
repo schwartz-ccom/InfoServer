@@ -1,10 +1,9 @@
 package server.ui;
 
 import res.Out;
-import server.data.DataHandler;
 import server.data.MousePositionHandler;
 import server.data.macro.MacroHandler;
-import server.network.ConnectionHandler;
+import server.network.NetworkHandler;
 import server.data.macro.Macro;
 import server.resources.MacroSubscriber;
 import server.ui.components.ComputerList;
@@ -138,11 +137,11 @@ public class App implements MacroSubscriber {
 
     private void enableServer() {
         if ( mniEnableServer.getText().equalsIgnoreCase( "Enable Server" ) ) {
-            ConnectionHandler.getInstance().activate();
+            NetworkHandler.getInstance().activate();
             mniEnableServer.setText( "Disable Server" );
         }
         else {
-            ConnectionHandler.getInstance().deactivate();
+            NetworkHandler.getInstance().deactivate();
             mniEnableServer.setText( "Enable Server" );
         }
     }
@@ -155,7 +154,7 @@ public class App implements MacroSubscriber {
         // Setting for server port
         JLabel lblPort = new JLabel( "Server Port Number: " );
         JTextField txtPort = new JTextField();
-        txtPort.setText( String.valueOf( ConnectionHandler.getInstance().getPort() ) );
+        txtPort.setText( String.valueOf( NetworkHandler.getInstance().getPort() ) );
 
         // Wrap up settings in Object[] container
         Object[] uiElements = { lblPort, txtPort };
@@ -172,7 +171,7 @@ public class App implements MacroSubscriber {
         );
 
         if ( status == 0 ) {
-            ConnectionHandler.getInstance().establishServer( Integer.valueOf( txtPort.getText() ) );
+            NetworkHandler.getInstance().setPort( Integer.valueOf( txtPort.getText() ) );
         }
     }
 

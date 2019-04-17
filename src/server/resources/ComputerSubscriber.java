@@ -8,7 +8,7 @@ import server.data.Computer;
  *
  * This is called by DataHandler's alertSubscribers() method.
  *
- * Subscribers currently: s/App, s/ConnectionHandler
+ * Subscribers currently: s/App, s/NetworkHandler
  */
 public interface ComputerSubscriber {
     void updateComputer( Computer data );
