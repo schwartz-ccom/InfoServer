@@ -43,7 +43,7 @@ public class ComputerList extends JPanel {
 
         pnlComp = new JPanel();
         pnlComp.setLayout( new BoxLayout( pnlComp, BoxLayout.X_AXIS ) );
-        pnlComp.setBorder( new TitledBorder( "Active Computers" ) );
+        pnlComp.setBorder( new TitledBorder( "Connected Systems" ) );
         pnlComp.addMouseListener( ma );
         pnlComp.addMouseMotionListener( ma );
         pnlComp.addMouseWheelListener( mouseWheelEvent -> adjustLocations( mouseWheelEvent.getUnitsToScroll(), 0 ) );

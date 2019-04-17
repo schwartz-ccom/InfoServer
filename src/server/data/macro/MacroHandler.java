@@ -4,6 +4,7 @@ import res.Out;
 import server.resources.MacroSubscriber;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -70,6 +71,11 @@ public class MacroHandler {
         return false;
     }
 
+    public void remove( Macro m ){
+        macros.remove( m );
+        alertSubscribers();
+    }
+
     public void saveAllToFile(){
         JFileChooser fc = new JFileChooser( System.getProperty( "user.home" ) );
         fc.setDialogType( JFileChooser.SAVE_DIALOG );
@@ -83,6 +89,25 @@ public class MacroHandler {
                 toSave[ place ] = macros.get( place );
 
             MacroFileHandler.saveMacrosToFile( fc.getSelectedFile(), toSave );
+        }
+    }
+    public void getMacrosFromFile(){
+        JFileChooser fc = new JFileChooser( System.getProperty( "user.home" ) );
+        fc.setDialogType( JFileChooser.OPEN_DIALOG );
+        fc.setFileSelectionMode( JFileChooser.FILES_ONLY );
+        fc.setFileFilter( new FileNameExtensionFilter( "XML", "xml" ) );
+
+        int exitStatus = fc.showOpenDialog( null );
+        if ( exitStatus == JFileChooser.APPROVE_OPTION ){
+
+            List< Macro > macsFromFile = MacroFileHandler.loadMacrosFromFile( fc.getSelectedFile() );
+            if ( macsFromFile != null ) {
+                for ( Macro m: macsFromFile ) {
+                    if ( !isInCollection( m.getMacroName() ) )
+                        macros.add( m );
+                }
+                alertSubscribers();
+            }
         }
     }
 

@@ -10,8 +10,11 @@ import server.data.macro.Macro;
 import server.resources.MacroSubscriber;
 import server.ui.components.ComputerList;
 
+import javax.management.remote.JMXConnectionNotification;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.util.*;
 
 /**
@@ -21,10 +24,11 @@ import java.util.*;
  */
 public class App implements ComputerSubscriber, MacroSubscriber {
 
-    private JFrame frm;
+    private JFrame frm, macroInfoFrame;
     private JMenu mnMacro;
     private JMenuItem mniCreateMacro;
     private JMenuItem mniExport;
+    private JMenuItem mniImport;
 
     private JComboBox< String > cbxMacros;
     private JLabel lblName;
@@ -38,11 +42,6 @@ public class App implements ComputerSubscriber, MacroSubscriber {
     }
 
     private App() {
-        // Create the MousePositionHandler for showing the mouse location in the macroPane
-        Toolkit.getDefaultToolkit().addAWTEventListener(
-                new MousePositionHandler(),
-                AWTEvent.MOUSE_EVENT_MASK );
-
         // Subscribe to both of the data senders
         DataHandler.getInstance().subscribe( this );
         MacroHandler.getInstance().subscribe( this );
@@ -73,9 +72,11 @@ public class App implements ComputerSubscriber, MacroSubscriber {
 
         mnMacro = new JMenu( "Macros" );
         mniCreateMacro = new JMenuItem( "Create Macro" );
+        mniImport = new JMenuItem( "Import Macros" );
         mniExport = new JMenuItem( "Export Macros" );
 
         mnMacro.add( mniCreateMacro );
+        mnMacro.add( mniImport );
         mbMenu.add( mnMacro );
 
         // Create a mouse position follower so that it's easier to create macros
@@ -96,6 +97,7 @@ public class App implements ComputerSubscriber, MacroSubscriber {
         // Add event handlers
         mniCreateMacro.addActionListener( actionEvent -> showMacroPane() );
         mniExport.addActionListener( actionEvent -> MacroHandler.getInstance().saveAllToFile() );
+        mniImport.addActionListener( actionEvent -> MacroHandler.getInstance().getMacrosFromFile() );
 
         frm.setJMenuBar( mbMenu );
 
@@ -134,6 +136,15 @@ public class App implements ComputerSubscriber, MacroSubscriber {
         // Create the actual area to edit the macro
         JTextArea txtMacroEditor = new JTextArea();
         txtMacroEditor.setLineWrap( true );
+        txtMacroEditor.addKeyListener( new KeyAdapter() {
+            @Override
+            public void keyPressed( KeyEvent e ) {
+                if ( e.isControlDown() && e.isShiftDown()) {
+                    Point toInsert = MousePositionHandler.getMouseLoc();
+                    txtMacroEditor.append( "MOUSE MOVE " + toInsert.x + " " + toInsert.y + "\n" );
+                }
+            }
+        } );
         txtMacroEditor.setWrapStyleWord( true );
 
         // Fill the edit macro area with whatever was passed
@@ -150,12 +161,9 @@ public class App implements ComputerSubscriber, MacroSubscriber {
         sp.setPreferredSize( new Dimension( maxWidth, 200 ) );
         sp.createVerticalScrollBar();
 
-        // Tracker int for the button's text
-        int textTracker = 0;
         // Create the button that shows the style sheet
         JButton btnShowCommands = new JButton( "Show Macro Commands" );
         btnShowCommands.addActionListener( actionEvent -> showMacroHelp() );
-
 
         // Wrap them all up into an object
         Object[] uiElements = { lblName, txtName, lblEditor, sp, lblMousePosition, btnShowCommands };
@@ -168,6 +176,8 @@ public class App implements ComputerSubscriber, MacroSubscriber {
             optPaneBtnLabels[ 0 ] = "Save Edited Macro";
         }
 
+        MousePositionHandler.startTracker();
+
         int status = JOptionPane.showOptionDialog(
                 frm,
                 uiElements,
@@ -179,10 +189,16 @@ public class App implements ComputerSubscriber, MacroSubscriber {
                 optPaneBtnLabels[ 0 ]
         );
 
+        if ( macroInfoFrame != null )
+            macroInfoFrame.dispose();
+
+        MousePositionHandler.stopTracker();
+
         if ( status == 0 ) {
             if ( !txtName.getText().isEmpty() && !txtMacroEditor.getText().isEmpty() ) {
                 // Create the Macro from the information given
                 Macro newMacro = new Macro( txtName.getText() );
+
                 // Add the commands to the macro. Each new line specifies a new command
                 String[] cmds = txtMacroEditor.getText().split( "\n" );
                 for ( String s : cmds )
@@ -203,20 +219,21 @@ public class App implements ComputerSubscriber, MacroSubscriber {
                 "RUN [ path_as_string ]\n" +
                 "DELAY [ time_in_milliseconds ]\n" +
                 "REPEAT [ times_to_repeat_macro ]\n\n" +
+                "CTRL + SHIFT will insert a MOUSE MOVE x y\n\n" +
                 "Note: These are in caps, but the commands are not\n" +
                 "case sensitive. That being said, you should probably adopt\n" +
                 "a style and either go full upper or lower case.";
 
-        JFrame f = new JFrame( "Help" );
-        f.setLocation( frm.getX() + frm.getWidth() + 30, frm.getY() );
+        macroInfoFrame = new JFrame( "Help" );
+        macroInfoFrame.setLocation( frm.getX() + frm.getWidth() + 30, frm.getY() );
 
         JTextArea e = new JTextArea( help );
         e.setPreferredSize( new Dimension( 400, 200 ) );
 
-        f.add( e );
-        f.setDefaultCloseOperation( JFrame.DISPOSE_ON_CLOSE );
-        f.pack();
-        f.setVisible( true );
+        macroInfoFrame.add( e );
+        macroInfoFrame.setDefaultCloseOperation( JFrame.DISPOSE_ON_CLOSE );
+        macroInfoFrame.pack();
+        macroInfoFrame.setVisible( true );
     }
 
     /**
@@ -248,6 +265,7 @@ public class App implements ComputerSubscriber, MacroSubscriber {
     public void updateMacros( Macro[] macros ) {
         mnMacro.removeAll();
         mnMacro.add( mniCreateMacro );
+        mnMacro.add( mniImport );
         mnMacro.add( mniExport );
         mnMacro.addSeparator();
 
@@ -257,7 +275,7 @@ public class App implements ComputerSubscriber, MacroSubscriber {
         for ( Macro m : macros ) {
             JMenuItem temp = new JMenuItem( m.getMacroName() );
             temp.addActionListener( actionEvent -> {
-                Object[] btnLabels = { "Run", "Edit", "Close" };
+                Object[] btnLabels = { "Run", "Edit", "Delete", "Close" };
 
                 int choice = JOptionPane.showOptionDialog(
                         frm,
@@ -273,6 +291,8 @@ public class App implements ComputerSubscriber, MacroSubscriber {
                     m.runMacro();
                 else if ( choice == 1 )
                     showMacroPane( 1, m.getMacroName(), m.getMacroSteps() );
+                else if ( choice == 2 )
+                    MacroHandler.getInstance().remove( m );
             } );
             mnMacro.add( temp );
             cbxMacros.addItem( m.getMacroName() );
