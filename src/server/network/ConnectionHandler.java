@@ -1,49 +1,101 @@
 package server.network;
 
+import res.Out;
 import server.data.Computer;
 import server.resources.ComputerSubscriber;
+import server.resources.NetworkSubscriber;
+
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The top level networking part.
  * I'm only doing a single seat server, so this'll be easier than say a chat client.
- *
- * Although, that means I won't be able to batch control more than one computer
- * in the future, which I think I'm okay with.
- *
- * This set up could become an issue if I have multiple clients trying to send me
- * data, but I believe that while I can only work with one client at a time, I could
- * have a queue of sorts that holds everyone until the server is ready to handle them.
- *
- * The client is set up so it's not supposed to connect to the server. The server is
- * supposed to be the one initiating the connection to the client, who then retrieves information
- * from the client, and then drops the connection, forcing the client to wait until the next
- * command.
- *
- * As I write that, it seems like it would waste cpu cycles, so I'll have to implement a state
- * machine that re-enables the client when it gets told to wake up.
  */
 public class ConnectionHandler extends Thread implements ComputerSubscriber {
 
-    private boolean isConnected = false;
+    private boolean isUp = false;
+    private int port = 25566;
+    private ServerSocket ss;
 
-    public ConnectionHandler( String ip ){
+    private List< NetworkSubscriber > subs;
 
+    private String classId = "ConnectionHandler";
+    private static ConnectionHandler instance;
+
+    public static ConnectionHandler getInstance() {
+        if ( instance == null )
+            instance = new ConnectionHandler();
+        return instance;
+    }
+
+    private ConnectionHandler() {
+        subs = new ArrayList<>();
     }
 
     /**
-     * Handles destruction of current connection
+     * Establishes the server socket on a designated port
+     *
+     * @param newPort The port to listen on
      */
-    public void kill(){
-        if ( !isConnected )
-            return;
-        else {
-            // Carry on?
+    public void establishServer( int newPort ) {
+        try {
+            if ( isUp )
+                ss.close();
+            this.port = newPort;
+            ss = new ServerSocket( this.port );
+            alertSubscribers( "Listening on port " + this.port );
+            Out.printInfo( classId, "Server listening on port " + ss.getLocalPort() );
+            isUp = true;
+        } catch ( Exception e ) {
+            Out.printError( classId, "Could not bind to port: " + e.getMessage() );
         }
     }
+
+    public void activate(){
+        establishServer( port );
+    }
+    /**
+     * Shuts down the server.
+     */
+    public void deactivate(){
+        try {
+            ss.close();
+        } catch( IOException ioe ){
+            Out.printError( classId, "Error closing server: " + ioe.getMessage() );
+        }
+        isUp = false;
+        alertSubscribers( "Server Down" );
+        Out.printInfo( classId, "Server has gone down!" );
+    }
+    /**
+     * Access method to get the currently bound port
+     *
+     * @return the port
+     */
+    public int getPort() {
+        return port;
+    }
+
+    /**
+     * Allow NetworkSubscribers to get ono the list
+     * @param sub The object wanting updates
+     */
+    public void subscribe( NetworkSubscriber sub ){
+        subs.add( sub );
+    }
+
+    private void alertSubscribers( String mes ){
+        for ( NetworkSubscriber nSub: subs ){
+            nSub.updateStatus( mes );
+        }
+    }
+
     // Update the connection's IP address and retry connection
     @Override
     public void updateComputer( Computer data ) {
-        this.kill();
-        new ConnectionHandler( data.getIP() );
+
     }
 }

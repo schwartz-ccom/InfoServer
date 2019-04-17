@@ -1,16 +1,15 @@
 package server.ui;
 
 import res.Out;
-import server.data.Computer;
 import server.data.DataHandler;
 import server.data.MousePositionHandler;
 import server.data.macro.MacroHandler;
-import server.resources.ComputerSubscriber;
+import server.network.ConnectionHandler;
 import server.data.macro.Macro;
 import server.resources.MacroSubscriber;
 import server.ui.components.ComputerList;
+import server.ui.components.StatusBar;
 
-import javax.management.remote.JMXConnectionNotification;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
@@ -22,16 +21,26 @@ import java.util.*;
  * This is set up as a singleton, because there should only
  * be on UI frame running / only one instance of the UI
  */
-public class App implements ComputerSubscriber, MacroSubscriber {
+public class App implements MacroSubscriber {
 
     private JFrame frm, macroInfoFrame;
+
+    // General Menu
+    private JMenu mnGeneral;
+    private JMenuItem mniSettings;
+
+    // Macro Menu
     private JMenu mnMacro;
     private JMenuItem mniCreateMacro;
     private JMenuItem mniExport;
     private JMenuItem mniImport;
 
+    // Connection Menu
+    private JMenu mnConnection;
+    private JMenuItem mniEnableServer;
+    private JMenuItem mniConnectionDetails;
+
     private JComboBox< String > cbxMacros;
-    private JLabel lblName;
     private JLabel lblMousePosition;
     private static App instance;
 
@@ -43,7 +52,6 @@ public class App implements ComputerSubscriber, MacroSubscriber {
 
     private App() {
         // Subscribe to both of the data senders
-        DataHandler.getInstance().subscribe( this );
         MacroHandler.getInstance().subscribe( this );
 
         // Set the look and fell, and then create the UI
@@ -70,14 +78,17 @@ public class App implements ComputerSubscriber, MacroSubscriber {
         // When a macro is created, they will appear in the Macro menu
         JMenuBar mbMenu = new JMenuBar();
 
+        // Create the general menu
+        mnGeneral = new JMenu( "App" );
+        mniSettings = new JMenuItem( "Settings" );
+
+        mnGeneral.add( mniSettings );
+
+        // Create the macro menu
         mnMacro = new JMenu( "Macros" );
         mniCreateMacro = new JMenuItem( "Create Macro" );
         mniImport = new JMenuItem( "Import Macros" );
         mniExport = new JMenuItem( "Export Macros" );
-
-        mnMacro.add( mniCreateMacro );
-        mnMacro.add( mniImport );
-        mbMenu.add( mnMacro );
 
         // Create a mouse position follower so that it's easier to create macros
         lblMousePosition = new JLabel( "Current mouse x,y: 0, 0" );
@@ -86,25 +97,83 @@ public class App implements ComputerSubscriber, MacroSubscriber {
         cbxMacros = new JComboBox<>();
         cbxMacros.addItem( "Choose a Macro" );
 
+        // Add all relevant items to the macro menu
+        mnMacro.add( mniCreateMacro );
+        mnMacro.add( mniImport );
+
+        // Create the connection menu
+        mnConnection = new JMenu( "Network" );
+        mniEnableServer = new JMenuItem( "Enable Server" );
+        mniConnectionDetails = new JMenuItem( "Server Status" );
+
+        mnConnection.add( mniEnableServer );
+        mnConnection.add( mniConnectionDetails );
+
+        // Add the menus to the menu bar
+        mbMenu.add( mnGeneral );
+        mbMenu.add( mnMacro );
+        mbMenu.add( mnConnection );
+
         // Create the scrollable / draggable computer interface
         frm.add( new ComputerList(), BorderLayout.NORTH );
 
-        // Just a test of the ComputerSubscriber system
-        // This will be replaced with an informational JPanel
-        lblName = new JLabel( "Name of computer selected: " );
-        frm.add( lblName, BorderLayout.CENTER );
-
         // Add event handlers
+        mniSettings.addActionListener( actionEvent -> showSettingsPane() );
         mniCreateMacro.addActionListener( actionEvent -> showMacroPane() );
         mniExport.addActionListener( actionEvent -> MacroHandler.getInstance().saveAllToFile() );
         mniImport.addActionListener( actionEvent -> MacroHandler.getInstance().getMacrosFromFile() );
+        mniEnableServer.addActionListener( actionEvent -> enableServer() );
 
+        // Set the menu bar
         frm.setJMenuBar( mbMenu );
+
+        // Set the status bar
+        frm.add( new StatusBar(), BorderLayout.SOUTH );
 
         // Finally, show the frame
         frm.setVisible( true );
         frm.repaint();
         frm.revalidate();
+    }
+
+    private void enableServer() {
+        if ( mniEnableServer.getText().equalsIgnoreCase( "Enable Server" ) ) {
+            ConnectionHandler.getInstance().activate();
+            mniEnableServer.setText( "Disable Server" );
+        }
+        else {
+            ConnectionHandler.getInstance().deactivate();
+            mniEnableServer.setText( "Enable Server" );
+        }
+    }
+
+    private void showSettingsPane() {
+
+        // Button labels
+        Object[] btnLabels = { "Apply Settings", "Cancel" };
+
+        // Setting for server port
+        JLabel lblPort = new JLabel( "Server Port Number: " );
+        JTextField txtPort = new JTextField();
+        txtPort.setText( String.valueOf( ConnectionHandler.getInstance().getPort() ) );
+
+        // Wrap up settings in Object[] container
+        Object[] uiElements = { lblPort, txtPort };
+
+        int status = JOptionPane.showOptionDialog(
+                frm,
+                uiElements,
+                "Settings",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.INFORMATION_MESSAGE,
+                null,
+                btnLabels,
+                btnLabels[ 0 ]
+        );
+
+        if ( status == 0 ) {
+            ConnectionHandler.getInstance().establishServer( Integer.valueOf( txtPort.getText() ) );
+        }
     }
 
     private void showMacroPane() {
@@ -244,16 +313,6 @@ public class App implements ComputerSubscriber, MacroSubscriber {
      */
     public JFrame getUI() {
         return Objects.requireNonNullElseGet( frm, JFrame::new );
-    }
-
-    /**
-     * Called when the selected computer is changed.
-     *
-     * @param data The Computer
-     */
-    @Override
-    public void updateComputer( Computer data ) {
-        lblName.setText( "Name of computer selected: " + data );
     }
 
     /**
