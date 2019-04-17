@@ -4,7 +4,6 @@ import res.Out;
 
 import java.awt.*;
 import java.awt.event.InputEvent;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -13,8 +12,10 @@ import java.util.List;
  */
 public class MacroWorker extends Thread {
 
+    // ClassId for Out, and the eventList to run through
     private String classId = this.getClass().getSimpleName();
     private List< String > eventList;
+
     // Responsible for actually carrying out the actions.
     private Robot r;
 
@@ -40,11 +41,7 @@ public class MacroWorker extends Thread {
         // It would be a nightmare to read, and this allows for error checking.
         for ( int x = 0; x < repeat; x++ ) {
 
-            // Use another list because we modify the events list when we receive a repeat() command
-            // and Java does not allow that ( co modification )
-            List< String > eventsChecked = new ArrayList<>( this.eventList );
-
-            for ( String cmd : eventsChecked ) {
+            for ( String cmd : eventList ) {
                 // Split the command into parts based on the space character, and then use:
                 // parts[ 0 ] as primary command ( mouse, key, run, type, delay )
                 // parts[ 1 ] as secondary ( mouse press, mouse move ), or as the data
@@ -74,8 +71,8 @@ public class MacroWorker extends Thread {
                         type( parts[ 1 ] );
                         break;
                     case "repeat":
-                        repeat += Integer.valueOf( parts[ 1 ] );
-                        this.eventList.remove( cmd );
+                        if ( x == 0 )
+                            repeat += Integer.valueOf( parts[ 1 ] );
                         break;
                     case "run":
                         run( parts[ 1 ] );
