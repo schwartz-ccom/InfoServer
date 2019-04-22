@@ -1,6 +1,5 @@
 package server.ui.components;
 
-import res.Out;
 import server.data.Computer;
 
 import javax.swing.*;
@@ -23,7 +22,15 @@ public class ComputerList extends JPanel {
     private int maxRows = 1;
     private int lastRow = 0;
 
-    public ComputerList() {
+    private static ComputerList instance;
+
+    public static ComputerList getInstance(){
+        if ( instance == null )
+            instance = new ComputerList();
+        return instance;
+    }
+
+    private ComputerList() {
         super();
 
         setLayout( new BorderLayout( 4, 4 ) );
@@ -48,8 +55,6 @@ public class ComputerList extends JPanel {
 
         add( sb, BorderLayout.EAST );
 
-        // Testing computers
-        test( 123 );
         updateDisplay( 0 );
     }
 
@@ -83,13 +88,15 @@ public class ComputerList extends JPanel {
             updateDisplay( currentRow );
     }
 
-    public void addComputer( String computerName ) {
-        // Create a computer icon / entity
-        Computer c = new Computer( computerName, "IP HERE" );
-
+    public void addComputer( Computer c ) {
         // Add it to our list of tracked computers
         comps.add( c );
 
+        refreshUI();
+        updateDisplay( currentRow );
+    }
+
+    private void refreshUI(){
         maxRows = comps.size() / screensPerRow;
         if ( comps.size() % screensPerRow == 0 )
             maxRows -= 1;
@@ -100,19 +107,10 @@ public class ComputerList extends JPanel {
             sb.setEnabled( true );
         sb.setMaximum( maxRows );
 
-        Out.printInfo( "Asd", "Row Count: " + maxRows );
         repaint();
     }
 
     public ArrayList< JLabel > getComputers() {
         return comps;
     }
-
-    private void test( int c ) {
-
-        for ( int x = 0; x < c; x++ ) {
-            addComputer( "Computer " + x );
-        }
-    }
-
 }

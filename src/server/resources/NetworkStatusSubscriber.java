@@ -1,5 +1,5 @@
 package server.resources;
 
-public interface NetworkSubscriber {
+public interface NetworkStatusSubscriber {
     void updateStatus( String mes );
 }

@@ -3,7 +3,8 @@ package server.network;
 import res.Out;
 import server.data.Computer;
 import server.resources.ComputerSubscriber;
-import server.resources.NetworkSubscriber;
+import server.resources.NetworkCommandSubscriber;
+import server.resources.NetworkStatusSubscriber;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -21,7 +22,8 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
     private int port = 25566;
     private ServerSocket ss;
 
-    private List< NetworkSubscriber > subs;
+    private List< NetworkStatusSubscriber > statSubs;
+    private List< NetworkCommandSubscriber > commSubs;
     private List< ConnectionHandler > clients;
 
     private String classId = "NetworkHandler";
@@ -34,7 +36,8 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
     }
 
     private NetworkHandler() {
-        subs = new ArrayList<>();
+        statSubs = new ArrayList<>();
+        commSubs = new ArrayList<>();
         clients = new ArrayList<>();
     }
 
@@ -53,7 +56,7 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
             if ( isUp )
                 ss.close();
             ss = new ServerSocket( this.port );
-            alertSubscribers( "Ready on port " + this.port );
+            alertStatSubscribers( "Ready on port " + this.port );
             Out.printInfo( classId, "Server ready on port " + ss.getLocalPort() );
             start();
             isUp = true;
@@ -96,7 +99,7 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
             Out.printError( classId, "Error closing server: " + ioe.getMessage() );
         }
         isUp = false;
-        alertSubscribers( "Server Down" );
+        alertStatSubscribers( "Server Down" );
         Out.printInfo( classId, "Server has gone down!" );
     }
 
@@ -109,17 +112,27 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
         return port;
     }
 
+
+    public void subscribeToCommands( NetworkCommandSubscriber sub ){
+        commSubs.add( sub );
+    }
+    public void alertCommSubscribers( String mes ){
+        for ( NetworkCommandSubscriber ncs: commSubs ){
+            ncs.sendCommand( mes );
+        }
+    }
+
     /**
      * Allow NetworkSubscribers to get ono the list
      *
      * @param sub The object wanting updates
      */
-    public void subscribe( NetworkSubscriber sub ) {
-        subs.add( sub );
+    public void subscribeToStats( NetworkStatusSubscriber sub ) {
+        statSubs.add( sub );
     }
 
-    private void alertSubscribers( String mes ) {
-        for ( NetworkSubscriber nSub : subs ) {
+    private void alertStatSubscribers( String mes ) {
+        for ( NetworkStatusSubscriber nSub : statSubs ) {
             nSub.updateStatus( mes );
         }
     }

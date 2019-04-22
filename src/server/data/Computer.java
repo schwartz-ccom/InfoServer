@@ -33,6 +33,10 @@ public class Computer extends JLabel {
     // Data variables for the computer
     private String name;
     private String ip;
+    private String compArch;
+    private String compOsName;
+    private String compOsVersion;
+    private String compOsUserLoggedIn;
 
     // Construct the JLabel for the Computer
     public Computer( String name, String IP ) {
@@ -40,6 +44,9 @@ public class Computer extends JLabel {
         super();
 
         // Give some basic data first
+
+        name = name.substring( 0,1 ).toUpperCase() + name.substring( 1 ).toLowerCase();
+
         this.name = name;
         this.ip = IP;
 
@@ -96,7 +103,13 @@ public class Computer extends JLabel {
     }
 
     public void setDetails( HashMap< String, String > s ){
+        name = s.get( "CNAME" );
+        compArch = s.get( "CARCH" );
+        compOsName = s.get( "CONAM" );
+        compOsVersion = s.get( "CVERS" );
+        compOsUserLoggedIn = s.get( "UNAME" );
 
+        this.setText( name );
     }
 
     public String getComputerName() {

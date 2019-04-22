@@ -7,7 +7,7 @@ import server.data.macro.MacroHandler;
 import server.network.NetworkHandler;
 import server.resources.ComputerSubscriber;
 import server.resources.MacroSubscriber;
-import server.resources.NetworkSubscriber;
+import server.resources.NetworkStatusSubscriber;
 
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
@@ -15,13 +15,13 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import java.awt.*;
 
-public class StatusBar extends JLabel implements ComputerSubscriber, MacroSubscriber, NetworkSubscriber {
+public class StatusBar extends JLabel implements ComputerSubscriber, MacroSubscriber, NetworkStatusSubscriber {
 
     private String cMes, mMes, sMes;
 
     public StatusBar(){
         super();
-        NetworkHandler.getInstance().subscribe( this );
+        NetworkHandler.getInstance().subscribeToStats( this );
         MacroHandler.getInstance().subscribe( this );
         DataHandler.getInstance().subscribe( this );
 

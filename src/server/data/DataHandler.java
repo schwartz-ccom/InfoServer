@@ -38,9 +38,7 @@ public class DataHandler {
     public void subscribe( ComputerSubscriber sub ){
         subscribers.add( sub );
     }
-    public boolean unsubscribe( ComputerSubscriber sub ){
-        return subscribers.remove( sub );
-    }
+
     private void alertSubscribers(){
 
         // Go through the list of subscribers and tell them to update their data with

@@ -1,6 +1,8 @@
 package server.ui;
 
 import res.Out;
+import server.data.Computer;
+import server.data.DataHandler;
 import server.data.MousePositionHandler;
 import server.data.macro.MacroHandler;
 import server.network.NetworkHandler;
@@ -12,6 +14,8 @@ import server.ui.components.StatusBar;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.*;
 
 /**
@@ -26,6 +30,7 @@ public class App implements MacroSubscriber {
     // General Menu
     private JMenu mnGeneral;
     private JMenuItem mniSettings;
+    private JMenuItem mniAddComputer;
 
     // Macro Menu
     private JMenu mnMacro;
@@ -37,9 +42,6 @@ public class App implements MacroSubscriber {
     private JMenu mnConnection;
     private JMenuItem mniEnableServer;
     private JMenuItem mniConnectionDetails;
-
-    // Computer List
-    private ComputerList cList;
 
     private JComboBox< String > cbxMacros;
     private JLabel lblMousePosition;
@@ -70,7 +72,6 @@ public class App implements MacroSubscriber {
 
     private void createGUI() {
 
-        cList = new ComputerList();
 
         frm = new JFrame( "Info Server" );
         frm.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
@@ -80,7 +81,7 @@ public class App implements MacroSubscriber {
             @Override
             public void componentResized( ComponentEvent e ) {
                 // Tell the computer panel that we have resized to accommodate more info
-                cList.updateFrameSize( frm.getWidth() );
+                ComputerList.getInstance().updateFrameSize( frm.getWidth() );
             }
         } );
         // Create the JMenu bar
@@ -90,8 +91,10 @@ public class App implements MacroSubscriber {
 
         // Create the general menu
         mnGeneral = new JMenu( "App" );
+        mniAddComputer = new JMenuItem( "Add a Computer on the network" );
         mniSettings = new JMenuItem( "Settings" );
 
+        mnGeneral.add( mniAddComputer );
         mnGeneral.add( mniSettings );
 
         // Create the macro menu
@@ -125,9 +128,27 @@ public class App implements MacroSubscriber {
         mbMenu.add( mnConnection );
 
         // Create the scrollable / draggable computer interface
-        frm.add( cList, BorderLayout.NORTH );
+        frm.add( ComputerList.getInstance(), BorderLayout.NORTH );
+
+        // Create the information panel
+        GridBagConstraints cs = new GridBagConstraints();
+        JPanel pnlInfo = new JPanel( new GridBagLayout() );
+
+        frm.add( pnlInfo, BorderLayout.CENTER );
+
+        JTextField txtCommand = new JTextField( 50 );
+        txtCommand.addKeyListener( new KeyAdapter() {
+            @Override
+            public void keyPressed( KeyEvent e ) {
+                if ( e.getKeyCode() == KeyEvent.VK_ENTER ){
+                    NetworkHandler.getInstance().alertCommSubscribers( txtCommand.getText() );
+                }
+            }
+        } );
+        pnlInfo.add( txtCommand );
 
         // Add event handlers
+        mniAddComputer.addActionListener( actionEvent -> showAddComputerPane() );
         mniSettings.addActionListener( actionEvent -> showSettingsPane() );
         mniCreateMacro.addActionListener( actionEvent -> showMacroPane() );
         mniExport.addActionListener( actionEvent -> MacroHandler.getInstance().saveAllToFile() );
@@ -154,6 +175,46 @@ public class App implements MacroSubscriber {
         else {
             NetworkHandler.getInstance().deactivate();
             mniEnableServer.setText( "Enable Server" );
+        }
+    }
+
+    private void showAddComputerPane(){
+        // Button labels
+        Object[] btnLabels = { "Connect", "Cancel" };
+
+        // Setting for server port
+        JLabel lblName = new JLabel( "Computer Name: " );
+        JTextField txtName = new JTextField();
+        txtName.setText( "" );
+
+        // Wrap up settings in Object[] container
+        Object[] uiElements = { lblName, txtName };
+
+        int status = JOptionPane.showOptionDialog(
+                frm,
+                uiElements,
+                "Add a computer",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.INFORMATION_MESSAGE,
+                null,
+                btnLabels,
+                btnLabels[ 0 ]
+        );
+
+        if ( status == 0 ) {
+            String name = txtName.getText();
+            if ( name.isEmpty() ){
+                return;
+            }
+            try {
+                String address = InetAddress.getByName( name ).getHostAddress();
+                System.out.println( "Address of " + name + ": " + address );
+                Computer c = new Computer( name, address );
+                ComputerList.getInstance().addComputer( c );
+
+            } catch ( UnknownHostException e ) {
+                JOptionPane.showMessageDialog( frm, "Could not find hostname " + name );
+            }
         }
     }
 
@@ -326,7 +387,6 @@ public class App implements MacroSubscriber {
     /**
      * getUI
      * If another part of the app needs the UI, they can use this.
-     *
      * @return the UI JFrame
      */
     public JFrame getUI() {
