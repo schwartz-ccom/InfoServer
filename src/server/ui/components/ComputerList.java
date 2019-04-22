@@ -1,12 +1,11 @@
 package server.ui.components;
 
+import res.Out;
 import server.data.Computer;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
 /**
@@ -15,101 +14,93 @@ import java.util.ArrayList;
 public class ComputerList extends JPanel {
 
     private ArrayList< JLabel > comps = new ArrayList<>();
-    private JScrollBar b;
+    private JScrollBar sb;
     private JPanel pnlComp;
-    private MouseAdapter ma;
 
-    private int startX = 0;
+    private int gapBetweenObjects = 18;
+    private int screensPerRow = 3;
+    private int currentRow = 1;
+    private int maxRows = 1;
+    private int lastRow = 0;
 
     public ComputerList() {
         super();
 
         setLayout( new BorderLayout( 4, 4 ) );
 
-        ma = new MouseAdapter() {
-            public void mousePressed( MouseEvent e ) {
-                startX = e.getXOnScreen();
-            }
-
-            @Override
-            public void mouseDragged( MouseEvent e ) {
-                adjustLocations( e.getXOnScreen() - startX, 1 );
-                startX = e.getXOnScreen();
-            }
-        };
-
-        addMouseListener( ma );
-        addMouseMotionListener( ma );
-
         pnlComp = new JPanel();
         pnlComp.setLayout( new BoxLayout( pnlComp, BoxLayout.X_AXIS ) );
-        pnlComp.setBorder( new TitledBorder( "Known Systems" ) );
-        pnlComp.addMouseListener( ma );
-        pnlComp.addMouseMotionListener( ma );
-        pnlComp.addMouseWheelListener( mouseWheelEvent -> adjustLocations( mouseWheelEvent.getUnitsToScroll(), 0 ) );
+        pnlComp.setBorder( new TitledBorder( "Registered Systems" ) );
 
         add( pnlComp, BorderLayout.CENTER );
 
-        // Testing computers
-        test( 4 );
+        sb = new JScrollBar();
+        sb.setOrientation( JScrollBar.VERTICAL );
+        sb.setMaximum( 0 );
+        sb.addAdjustmentListener( adjustmentEvent -> {
+            if ( lastRow != sb.getValue() ) {
+                updateDisplay( sb.getValue() );
+                lastRow = sb.getValue();
+            }
+        } );
 
+        lastRow = sb.getValue();
+
+        add( sb, BorderLayout.EAST );
+
+        // Testing computers
+        test( 123 );
+        updateDisplay( 0 );
+    }
+
+    // Currently only showing three computers to a row by default
+    private void updateDisplay( int row ) {
+
+        // Remove all computers on the thing now
+        pnlComp.removeAll();
+        pnlComp.revalidate();
+
+        for ( int x = ( row * screensPerRow ); x < ( row * screensPerRow ) + screensPerRow; x++ ) {
+            if ( x < comps.size() ) {
+                if ( comps.get( x ) != null ) {
+                    pnlComp.add( comps.get( x ) );
+                    if ( x != ( row * screensPerRow ) + screensPerRow - 1 )
+                        pnlComp.add( Box.createHorizontalStrut( gapBetweenObjects ) );
+                }
+            }
+        }
+
+        currentRow = row;
+        pnlComp.repaint();
+    }
+
+    public void updateFrameSize( int newSize ) {
+        int old = screensPerRow;
+        screensPerRow = newSize / ( 256 + gapBetweenObjects );
+        maxRows = comps.size() / screensPerRow;
+
+        if ( old != screensPerRow )
+            updateDisplay( currentRow );
     }
 
     public void addComputer( String computerName ) {
         // Create a computer icon / entity
         Computer c = new Computer( computerName, "IP HERE" );
-        c.addMouseListener( ma );
-        c.addMouseMotionListener( ma );
-        // Add it to our list of tracked computers in case we need to access them
-        // Which, we will.
+
+        // Add it to our list of tracked computers
         comps.add( c );
 
-        // Then add it to the Computer JPanel.
-        pnlComp.add( c );
-        pnlComp.add( Box.createRigidArea( new Dimension( 24, this.getHeight() ) ) );
-        repaint();
-    }
+        maxRows = comps.size() / screensPerRow;
+        if ( comps.size() % screensPerRow == 0 )
+            maxRows -= 1;
 
-    private void adjustLocations( int howMuch, int mode ) {
-        for ( JLabel lbl : getComputers() ) {
+        if ( maxRows == 0 )
+            sb.setEnabled( false );
+        else
+            sb.setEnabled( true );
+        sb.setMaximum( maxRows );
 
-            int factor = 8;
-
-            if ( mode == 1 )
-                factor = 1;
-
-            lbl.setLocation( lbl.getX() + ( howMuch * factor ), lbl.getY() );
-
-            // This handles the bounds of the scroll area.
-            // Pretty much, detect if the first is too far right or the last is too far left
-            // and then adjust each one accordingly.
-            // This should never need to be changed. Ever.
-            int diff = 0;
-            int buffer = 8;
-
-            // Location of the last computer's edge
-            int lastLocEnd =
-                    getComputers().get( comps.size() - 1 ).getX() +
-                            getComputers().get( comps.size() - 1 ).getWidth();
-
-            // If the first computer start x() is too far right, adjust everyone back by however much
-            // If the last computer's end width() + x() is too far left, adjust forward
-            boolean adjust = false;
-            if ( getComputers().get( 0 ).getX() > getX() ) {
-                diff = getComputers().get( 0 ).getX() * -1 + buffer;
-                adjust = true;
-            }
-            else if ( lastLocEnd < ( getWidth() + getX() ) ) {
-                diff = ( getWidth() + getX() ) - lastLocEnd - buffer;
-                adjust = true;
-            }
-
-            // If we need to adjust, do it.
-            if ( adjust ) {
-                for ( JLabel lbls : getComputers() )
-                    lbls.setLocation( lbls.getX() + diff, lbls.getY() );
-            }
-        }
+        Out.printInfo( "Asd", "Row Count: " + maxRows );
         repaint();
     }
 

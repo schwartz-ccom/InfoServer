@@ -11,8 +11,7 @@ import server.ui.components.StatusBar;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 import java.util.*;
 
 /**
@@ -38,6 +37,9 @@ public class App implements MacroSubscriber {
     private JMenu mnConnection;
     private JMenuItem mniEnableServer;
     private JMenuItem mniConnectionDetails;
+
+    // Computer List
+    private ComputerList cList;
 
     private JComboBox< String > cbxMacros;
     private JLabel lblMousePosition;
@@ -67,11 +69,20 @@ public class App implements MacroSubscriber {
     }
 
     private void createGUI() {
+
+        cList = new ComputerList();
+
         frm = new JFrame( "Info Server" );
         frm.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
         frm.setLayout( new BorderLayout( 4, 4 ) );
-        frm.setSize( new Dimension( 800, 600 ) );
-
+        frm.setSize( new Dimension( 850, 600 ) );
+        frm.addComponentListener( new ComponentAdapter() {
+            @Override
+            public void componentResized( ComponentEvent e ) {
+                // Tell the computer panel that we have resized to accommodate more info
+                cList.updateFrameSize( frm.getWidth() );
+            }
+        } );
         // Create the JMenu bar
         // Only gives access to Macros as of right now.
         // When a macro is created, they will appear in the Macro menu
@@ -114,7 +125,7 @@ public class App implements MacroSubscriber {
         mbMenu.add( mnConnection );
 
         // Create the scrollable / draggable computer interface
-        frm.add( new ComputerList(), BorderLayout.NORTH );
+        frm.add( cList, BorderLayout.NORTH );
 
         // Add event handlers
         mniSettings.addActionListener( actionEvent -> showSettingsPane() );
@@ -175,12 +186,17 @@ public class App implements MacroSubscriber {
         }
     }
 
+    /**
+     * Kind of like a default constructor, just passes normal params.
+     * This is used when initially creating a macro
+     */
     private void showMacroPane() {
         showMacroPane( 0, "", null );
     }
 
     /**
      * Shows the macro creation pane from the MenuItem with bits filled in
+     * Used when editing a macro
      */
     private void showMacroPane( int mode, String title, String[] body ) {
 
@@ -279,6 +295,9 @@ public class App implements MacroSubscriber {
         }
     }
 
+    /**
+     * Shows what available commands there are when making / editing a macro
+     */
     private void showMacroHelp() {
         String help = "MOUSE MOVE [ x_coordinate ] [ y_coordinate ]\n" +
                 "MOUSE PRESS [ mouse_button ]\n" +

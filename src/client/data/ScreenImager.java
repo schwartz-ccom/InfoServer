@@ -2,30 +2,29 @@ package client.data;
 
 import res.Out;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
+import java.awt.image.RenderedImage;
 
+/**
+ * Handles taking a screenshot and returning an image
+ */
 public class ScreenImager {
 
-    public static void sendScreenshotToServer(){
+    public static RenderedImage getScreenshot(){
         try {
+            // Declare a robot to get the screenshot
             Robot r = new Robot();
 
-            // Temporarily save it to a file
-            // LINUX. ONLY.
-            File toSave = new File ( System.getProperty( "user.home" ) + "/img.png" );
-
+            // Get the screen dimensions
             Rectangle cap = new Rectangle( Toolkit.getDefaultToolkit().getScreenSize() );
 
-            BufferedImage bi = r.createScreenCapture( cap );
-            ImageIO.write( bi, "png", toSave );
-
-            Out.printInfo( "ScreenImager", "Saved image!" );
+            // Render it.
+            return r.createScreenCapture( cap );
 
         } catch ( Exception e ) {
+            Out.printError("ScreenImager", "Something happened" );
             e.printStackTrace();
         }
+        return null;
     }
 }

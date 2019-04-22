@@ -59,6 +59,7 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
             isUp = true;
         } catch ( Exception e ) {
             Out.printError( classId, "Could not bind to port: " + e.getMessage() );
+            e.printStackTrace();
         }
     }
 
@@ -67,7 +68,7 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
      */
     public void run() {
         Out.printInfo( classId, "Running" );
-        while ( true ) {
+        while ( isUp ) {
             Socket client;
             try {
                 client = ss.accept();

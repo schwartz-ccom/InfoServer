@@ -1,18 +1,19 @@
 package server.data;
 
-import server.data.macro.Macro;
+import res.Out;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Map;
+import java.io.IOException;
+import java.util.HashMap;
 
 /**
  * On the UI, this is the component that shows the desktop of the computer
  * as well as the computer's name.
- * <p>
  * Also handles the actual data for the computer
  */
 public class Computer extends JLabel {
@@ -25,6 +26,9 @@ public class Computer extends JLabel {
     private Border selectedBorder = BorderFactory.createCompoundBorder(
             BorderFactory.createEtchedBorder(),
             BorderFactory.createEmptyBorder( 2, 2, 2, 2 ) );
+
+    // Formatting variables
+    private Dimension compIconSize = new Dimension( 256, 144 );
 
     // Data variables for the computer
     private String name;
@@ -39,17 +43,25 @@ public class Computer extends JLabel {
         this.name = name;
         this.ip = IP;
 
-        // Define the sizes of the components;
-        Dimension compIconSize = new Dimension( 128, 148 );
-
         // Get the imageIcon for the computer
-        ImageIcon defIcon = new ImageIcon( getClass().getResource( "../../server/resources/images/defIcon.png" ) );
+        Image defIcon = null;
+        try {
+            defIcon = ImageIO.read( getClass().getResource( "../../server/resources/images/defIcon.png" ) );
+        } catch ( IOException e ){
+            Out.printError( getClass().getSimpleName(), "Error getting resource: " + e.getMessage() );
+        }
+        Icon scaled = new ImageIcon(
+                defIcon.getScaledInstance(
+                        compIconSize.width,
+                        compIconSize.height,
+                        Image.SCALE_SMOOTH )
+        );
 
         // Give it a size
         this.setMinimumSize( compIconSize );
 
         // Set properties of this JLabel
-        this.setIcon( defIcon );
+        this.setIcon( scaled );
         this.setText( name );
         this.setBorder( unselectedBorder );
 
@@ -67,10 +79,6 @@ public class Computer extends JLabel {
         } );
     }
 
-    public void updateInformation( Map< String, String > info ) {
-
-    }
-
     public String getIP() {
         return this.ip;
     }
@@ -79,6 +87,15 @@ public class Computer extends JLabel {
      * @param command The hot key action to run as string
      */
     public void setHotkeyAction( String command ) {
+
+    }
+
+    public void setImage( Image i ){
+        Image scaled = i.getScaledInstance( compIconSize.width, compIconSize.height, Image.SCALE_SMOOTH );
+        setIcon( new ImageIcon( scaled ) );
+    }
+
+    public void setDetails( HashMap< String, String > s ){
 
     }
 
@@ -104,21 +121,5 @@ public class Computer extends JLabel {
     @Override
     public String toString() {
         return getComputerName();
-    }
-
-    private void test() {
-
-        Macro m = new Macro( "Test Macro" );
-        m.addAction( "MOUSE MOVE 100" );
-        m.addAction( "MOUSE PRESS 1" );
-        m.addAction( "MOUSE PRESS 2" );
-        m.addAction( "DELAY 1000" );
-        m.addAction( "MOUSE MOVE 120 120" );
-        m.addAction( "MOUSE PRESS 1" );
-        m.addAction( "RUN gedit" );
-        m.addAction( "MOUSE MOVE 300 300" );
-
-
-        m.runMacro();
     }
 }
