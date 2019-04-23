@@ -1,6 +1,7 @@
 package server.data;
 
 import res.Out;
+import server.data.macro.Macro;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -31,12 +32,14 @@ public class Computer extends JLabel {
     private Dimension compIconSize = new Dimension( 256, 144 );
 
     // Data variables for the computer
-    private String name;
-    private String ip;
-    private String compArch;
-    private String compOsName;
-    private String compOsVersion;
-    private String compOsUserLoggedIn;
+
+    // comp[a-zA-Z] = Computer overall detail
+    // compOs[a-zA-Z] = Computer OS details
+    // compHard[a-zA-Z] = Computer Hardware details
+
+    private String compName;
+    private String compIp;
+    private HashMap< String, String > details;
 
     // Construct the JLabel for the Computer
     public Computer( String name, String IP ) {
@@ -47,8 +50,12 @@ public class Computer extends JLabel {
 
         name = name.substring( 0,1 ).toUpperCase() + name.substring( 1 ).toLowerCase();
 
-        this.name = name;
-        this.ip = IP;
+        this.compName = name;
+        this.compIp = IP;
+
+        this.details = new HashMap<>();
+        details.put( "CNAME", this.compName );
+        details.put( "CONNECTED?", "NO" );
 
         // Get the imageIcon for the computer
         Image defIcon = null;
@@ -87,13 +94,13 @@ public class Computer extends JLabel {
     }
 
     public String getIP() {
-        return this.ip;
+        return this.compIp;
     }
 
     /**
-     * @param command The hot key action to run as string
+     * @param command The hot key action to run as macro
      */
-    public void setHotkeyAction( String command ) {
+    public void setHotkeyAction( Macro command ) {
 
     }
 
@@ -103,17 +110,18 @@ public class Computer extends JLabel {
     }
 
     public void setDetails( HashMap< String, String > s ){
-        name = s.get( "CNAME" );
-        compArch = s.get( "CARCH" );
-        compOsName = s.get( "CONAM" );
-        compOsVersion = s.get( "CVERS" );
-        compOsUserLoggedIn = s.get( "UNAME" );
+        compName = s.get( "CNAME" );
+        this.details = s;
 
-        this.setText( name );
+        this.setText( compName );
+    }
+
+    public HashMap< String, String > getDetails(){
+        return this.details;
     }
 
     public String getComputerName() {
-        return this.name;
+        return this.compName;
     }
 
     private void setDataComputer() {

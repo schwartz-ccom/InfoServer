@@ -1,9 +1,9 @@
 package client.network;
 
 import client.DataRepository;
-import client.data.Details;
 import client.data.ScreenImager;
 import res.Out;
+import server.data.macro.Macro;
 
 import javax.imageio.ImageIO;
 import javax.imageio.stream.ImageOutputStream;
@@ -58,10 +58,18 @@ public class ConnectionHandler extends Thread {
                         }
                         else if ( mes.equalsIgnoreCase( "LOAD MACRO" ) ){
                             // We want to load the macro that is coming throught the pipeline
+                            Object read = in.readObject();
+                            if ( read instanceof Macro ){
+                                DataRepository.getInstance().loadMacro( ( Macro ) read );
+                            }
+                            else
+                                Out.printError( classId, "Unepected object sent through pipe." );
                         }
                         else if ( mes.startsWith( "RUN MACRO" ) ){
                             // Run whichever macro was specified after MACRO ( 1 -> x )
-
+                            String nameOfMacroToRun = mes.substring( 11 );
+                            Out.printInfo( classId, "Running macro: " + nameOfMacroToRun );
+                            //DataRepository.getInstance().runMacro( nameOfMacroToRun );
                         }
                         else if ( mes.contains( "GOODBYE" ) ){
                             // Client is disconnecting ( Server is switching computers )

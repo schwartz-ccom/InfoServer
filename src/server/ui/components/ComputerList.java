@@ -88,7 +88,7 @@ public class ComputerList extends JPanel {
             updateDisplay( currentRow );
     }
 
-    public void addComputer( Computer c ) {
+    public void addComputerToDisplay( Computer c ) {
         // Add it to our list of tracked computers
         comps.add( c );
 
@@ -108,9 +108,5 @@ public class ComputerList extends JPanel {
         sb.setMaximum( maxRows );
 
         repaint();
-    }
-
-    public ArrayList< JLabel > getComputers() {
-        return comps;
     }
 }

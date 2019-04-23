@@ -2,14 +2,20 @@ package server.network;
 
 import res.Out;
 import server.data.Computer;
+import server.data.DataHandler;
 import server.resources.ComputerSubscriber;
-import server.resources.NetworkCommandSubscriber;
 import server.resources.NetworkStatusSubscriber;
 
+import javax.imageio.ImageIO;
+import javax.imageio.stream.ImageInputStream;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -20,11 +26,17 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
 
     private boolean isUp = false;
     private int port = 25566;
-    private ServerSocket ss;
 
     private List< NetworkStatusSubscriber > statSubs;
-    private List< NetworkCommandSubscriber > commSubs;
-    private List< ConnectionHandler > clients;
+
+    private Socket client;
+    private ObjectInputStream in;
+    private ObjectOutputStream out;
+    private ImageInputStream is;
+
+    private String[] messageList = new String[ 256 ];
+
+    private boolean keepConnectionAlive = true;
 
     private String classId = "NetworkHandler";
     private static NetworkHandler instance;
@@ -37,70 +49,78 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
 
     private NetworkHandler() {
         statSubs = new ArrayList<>();
-        commSubs = new ArrayList<>();
-        clients = new ArrayList<>();
     }
 
     public void setPort( int newPort ) {
         this.port = newPort;
-        if ( isUp )
-            // Soon this should send out a message to all clients, but oh well.
-            establishServer();
     }
 
     /**
      * Establishes the server socket on a designated port
      */
-    private void establishServer() {
-        try {
-            if ( isUp )
-                ss.close();
-            ss = new ServerSocket( this.port );
-            alertStatSubscribers( "Ready on port " + this.port );
-            Out.printInfo( classId, "Server ready on port " + ss.getLocalPort() );
-            start();
-            isUp = true;
-        } catch ( Exception e ) {
-            Out.printError( classId, "Could not bind to port: " + e.getMessage() );
-            e.printStackTrace();
-        }
+    private void establishConnection() {
+
     }
 
     /**
-     * Inherited from Thread
+     * Run. Overloaded from Thread
+     * It initially asks for details and a screenshot first, but then you can
+     * ask it anything else afterwards
      */
     public void run() {
-        Out.printInfo( classId, "Running" );
-        while ( isUp ) {
-            Socket client;
+
+        try {
+            Out.printInfo( classId, "Sending request..." );
+
+            write( "DETAILS" );
+            Object received = in.readObject();
+
+            HashMap< String, String > fromClient = null;
+            if ( received instanceof HashMap )
+                //noinspection unchecked
+                fromClient = ( HashMap< String, String > ) received;
+            else
+                Out.printError( classId, "Unexpected type from client" );
+
+            BufferedImage img = ImageIO.read( is );
+
+            DataHandler.getInstance().getCurrentComputer().setDetails( fromClient );
+            DataHandler.getInstance().getCurrentComputer().setImage( img );
+
+            while ( keepConnectionAlive ){
+                while ( messageList.length == 0);
+                String mes =  messageList[ 0 ];
+                Out.printInfo( classId, "Message to send: " + mes );
+
+            }
+
+            Out.printInfo( classId, "Info from client received!" );
+
+        } catch ( Exception e ) {
+            Out.printError( classId, "Error: " + e.getMessage() );
+        } finally {
             try {
-                client = ss.accept();
-                ConnectionHandler con = new ConnectionHandler( client );
-                con.start();
-                clients.add( con );
-                Out.printInfo( classId, "Accepted" );
-            } catch ( Exception e ) {
-                Out.printError( classId, "Error accepting client: " + e.getMessage() );
+                out.close();
+                in.close();
+                client.close();
+            } catch ( IOException ioe ) {
+                Out.printError( classId, "Error closing streams: " + ioe.getMessage() );
             }
         }
     }
 
-    public void activate() {
-        establishServer();
+    private void write( String message ) throws IOException {
+        out.writeObject( message );
+        out.flush();
     }
 
-    /**
-     * Shuts down the server.
-     */
-    public void deactivate() {
-        try {
-            ss.close();
-        } catch ( IOException ioe ) {
-            Out.printError( classId, "Error closing server: " + ioe.getMessage() );
+    public void sendCommand( String mes ) {
+        for ( int place = 0; place < 256; place++ ){
+            if ( messageList[ place ].equals( "" ) ){
+                messageList[ place ] = mes;
+                return;
+            }
         }
-        isUp = false;
-        alertStatSubscribers( "Server Down" );
-        Out.printInfo( classId, "Server has gone down!" );
     }
 
     /**
@@ -110,16 +130,6 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
      */
     public int getPort() {
         return port;
-    }
-
-
-    public void subscribeToCommands( NetworkCommandSubscriber sub ){
-        commSubs.add( sub );
-    }
-    public void alertCommSubscribers( String mes ){
-        for ( NetworkCommandSubscriber ncs: commSubs ){
-            ncs.sendCommand( mes );
-        }
     }
 
     /**

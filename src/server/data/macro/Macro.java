@@ -90,8 +90,6 @@ public class Macro {
         MacroHandler.getInstance().addMacroToCollection( this );
     }
 
-
-
     public String toString(){
         StringBuilder sb = new StringBuilder();
         sb.append( getMacroName() );
