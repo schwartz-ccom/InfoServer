@@ -84,13 +84,14 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
             // a new computer is clicked.
             client = new Socket();
             client.connect( new InetSocketAddress( ipToConnect, port ), 2000 );
+            client.setSoTimeout( 2000 );
 
             // Create the object streams
             in = new ObjectInputStream( client.getInputStream() );
             out = new ObjectOutputStream( client.getOutputStream() );
             is = ImageIO.createImageInputStream( client.getInputStream() );
 
-            client.setSoTimeout( 2000 );
+            keepConnectionAlive = true;
             Out.printInfo( classId, "Connected." );
         } catch ( IOException ioe ) {
             Out.printInfo( classId, "Could not connect." );

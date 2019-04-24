@@ -611,9 +611,15 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         lblCompNameDisp.setText( data.getComputerName() );
 
         // If we haven't connected yet, stop.
-        if ( dets.get( "CONNECTED?" ).equalsIgnoreCase( "NO" ) )
+        if ( dets.get( "CONNECTED?" ).equalsIgnoreCase( "NO" ) ) {
+            lblOSInfoDisp.setText( "Unknown" );
+            lblCPUUsageDisp.setText( "Unknown" );
+            lblUserNameDisp.setText( "Unknown" );
+            lblHasClientInstalled.setText( "Unknown" );
+            lblMemUsageDisp.setText( "Unknown" );
+            lblDiskUsageDisp.setText( "Unknown" );
             return;
-
+        }
         lblHasClientInstalled.setText( "Yup" );
 
         // Set last access time
