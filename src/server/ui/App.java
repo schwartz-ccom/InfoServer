@@ -49,6 +49,8 @@ public class App implements MacroSubscriber, ComputerSubscriber {
 
     // Information pane elements
     private JPanel pnlInfo;
+    private JPanel pnlMacro;
+    private JLabel lblHasClientInstalled;
     private JLabel lblCompNameDisp;
     private JLabel lblOSInfoDisp;
     private JLabel lblUserNameDisp;
@@ -87,7 +89,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
     }
 
     private void createGUI() {
-        frm = new JFrame( "Info Server - CONFIDENTIAL MARK 1 - TALLAHASSEE" );
+        frm = new JFrame( "Info Server - CONFIDENTIAL MARK 2 - WISCONSIN" );
         frm.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
         frm.setLayout( new BorderLayout( 4, 4 ) );
         frm.setSize( new Dimension( 850, 600 ) );
@@ -145,7 +147,11 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         // Create the information panel
         pnlInfo = makeInfoPanel();
         pnlInfo.setEnabled( false );
-        frm.add( pnlInfo, BorderLayout.CENTER );
+        frm.add( pnlInfo, BorderLayout.WEST );
+
+        pnlMacro = makeMacroSelectPanel();
+        pnlMacro.setEnabled( false );
+        frm.add( pnlMacro, BorderLayout.CENTER );
 
         // Add event handlers
         mniAddComputer.addActionListener( actionEvent -> showAddComputerPane() );
@@ -178,31 +184,35 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         cs.gridy = 0;
         pnlInfo.add( lblCompName, cs );
 
+        JLabel lblHasClient = new JLabel( "Is reachable: " );
+        cs.gridy = 1;
+        pnlInfo.add( lblHasClient, cs );
+
         // Displays all OS info on one line
         JLabel lblOSInfo = new JLabel( "OS Info: " );
-        cs.gridy = 1;
+        cs.gridy = 2;
         pnlInfo.add( lblOSInfo, cs );
 
         JLabel lblUserName = new JLabel( "Current User: " );
-        cs.gridy = 2;
+        cs.gridy = 3;
         pnlInfo.add( lblUserName, cs );
 
         // Shows all CPU stats on one line
         JLabel lblCPUUsage = new JLabel( "CPU Usage: " );
-        cs.gridy = 3;
+        cs.gridy = 4;
         pnlInfo.add( lblCPUUsage, cs );
 
         // Shows all Mem stats on one line
         JLabel lblMemUsage = new JLabel( "Memory Usage: " );
-        cs.gridy = 4;
+        cs.gridy = 5;
         pnlInfo.add( lblMemUsage, cs );
 
         JLabel lblDiskUsage = new JLabel( "C:\\ Disk Usage: " );
-        cs.gridy = 5;
+        cs.gridy = 6;
         pnlInfo.add( lblDiskUsage, cs );
 
         JLabel lblLastUpdate = new JLabel( "Updated at: " );
-        cs.gridy = 6;
+        cs.gridy = 7;
         pnlInfo.add( lblLastUpdate, cs );
 
         // Initialize the elements that display the info. If no info is known, "UNKNOWN" will be displayed
@@ -212,69 +222,36 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         cs.gridy = 0;
         pnlInfo.add( lblCompNameDisp, cs );
 
+        lblHasClientInstalled = new JLabel( "Unknown" );
+        cs.gridy = 1;
+        pnlInfo.add( lblHasClientInstalled, cs );
+
         // Displays all OS info on one line
         lblOSInfoDisp = new JLabel( "Unknown" );
-        cs.gridy = 1;
+        cs.gridy = 2;
         pnlInfo.add( lblOSInfoDisp, cs );
 
         lblUserNameDisp = new JLabel( "Unknown" );
-        cs.gridy = 2;
+        cs.gridy = 3;
         pnlInfo.add( lblUserNameDisp, cs );
 
         // Shows all CPU stats on one line
         lblCPUUsageDisp = new JLabel( "Unknown" );
-        cs.gridy = 3;
+        cs.gridy = 4;
         pnlInfo.add( lblCPUUsageDisp, cs );
 
         // Shows all Mem stats on one line
         lblMemUsageDisp = new JLabel( "Unknown" );
-        cs.gridy = 4;
+        cs.gridy = 5;
         pnlInfo.add( lblMemUsageDisp, cs );
 
         lblDiskUsageDisp = new JLabel( "Unknown" );
-        cs.gridy = 5;
+        cs.gridy = 6;
         pnlInfo.add( lblDiskUsageDisp, cs );
 
         lblLastUpdateDisp = new JLabel( "Never updated" );
-        cs.gridy = 6;
+        cs.gridy = 7;
         pnlInfo.add( lblLastUpdateDisp, cs );
-
-        // Add the macro select screen
-        cs.gridy = 0;
-        cs.gridx = 2;
-
-        modelAllMacros = new DefaultListModel<>();
-        modelLoadedMacros = new DefaultListModel<>();
-
-        Dimension dimListSize = new Dimension( 200, 120 );
-
-        // All macros
-        JList< String > listAllMacros = new JList<>( modelAllMacros );
-        cs.ipady = 100;
-        JScrollPane spAll = new JScrollPane( listAllMacros );
-        spAll.setSize( dimListSize );
-        pnlInfo.add( spAll, cs );
-        cs.ipady = 0;
-
-        // Button to transfer them
-        JButton btnSendMacro = new JButton( ">>" );
-        cs.gridx = 3;
-        cs.gridy = 0;
-        pnlInfo.add( btnSendMacro, cs );
-
-        JButton btnTakeMacro = new JButton( "<<" );
-        cs.gridy = 1;
-        pnlInfo.add( btnTakeMacro, cs );
-
-        cs.ipady = 100;
-        // Client's loaded macros
-        JList< String > listLoadedMacros = new JList<>( modelLoadedMacros );
-        cs.gridx = 4;
-        cs.gridy = 0;
-        JScrollPane spLoaded = new JScrollPane( listLoadedMacros );
-        spLoaded.setSize( dimListSize );
-        pnlInfo.add( spLoaded, cs );
-        cs.ipady = 0;
 
         // Now add all the buttons to send commands with
         // Refresh - Updates info / icon
@@ -282,7 +259,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         // Run Command - Runs a typed command on command line
         // Restart - Confirms, and then restarts.
 
-        cs.gridy = 7;
+        cs.gridy = 8;
         cs.gridx = 0;
 
         Dimension dimBtnPreferred = new Dimension( 180, 30 );
@@ -291,22 +268,70 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         btnRefresh.setPreferredSize( dimBtnPreferred );
         pnlInfo.add( btnRefresh, cs );
 
-        JButton btnMacro = new JButton( "Play Loaded Macro" );
+        JButton btnMacro = new JButton( "Macros" );
         btnMacro.setPreferredSize( dimBtnPreferred );
         cs.gridx = 1;
         pnlInfo.add( btnMacro, cs );
 
-        JButton btnRunCmd = new JButton( "Run Command..." );
+        JButton btnRunCmd = new JButton( "Run Command" );
         btnRunCmd.setPreferredSize( dimBtnPreferred );
-        cs.gridx = 2;
+        btnRunCmd.addActionListener( actionEvent -> {
+            String cmd = JOptionPane.showInputDialog( "Command to run on remote machine " );
+            if ( cmd != null )
+                NetworkHandler.getInstance().sendCommand( "RUN " + cmd );
+        } );
+        cs.gridy = 9;
+        cs.gridx = 0;
         pnlInfo.add( btnRunCmd, cs );
 
-        JButton btnRestart = new JButton( "Restart Computer..." );
-        btnRestart.setPreferredSize( dimBtnPreferred );
-        cs.gridx = 3;
-        pnlInfo.add( btnRestart, cs );
+        JButton btnMore = new JButton( "More Commands" );
+        btnMore.setPreferredSize( dimBtnPreferred );
+        cs.gridx = 1;
+        pnlInfo.add( btnMore, cs );
+
+        pnlInfo.setMinimumSize( new Dimension( frm.getWidth() / 2, 300 ) );
 
         return pnlInfo;
+    }
+
+    private JPanel makeMacroSelectPanel(){
+
+        JPanel pnlMacro = new JPanel( new GridBagLayout() );
+        pnlMacro.setBorder( BorderFactory.createTitledBorder( "Macro Select" ) );
+
+        GridBagConstraints cs = new GridBagConstraints();
+        cs.insets = new Insets( 4, 4, 4, 4 );
+
+        modelAllMacros = new DefaultListModel<>();
+        modelLoadedMacros = new DefaultListModel<>();
+
+        Dimension dimListSize = new Dimension( 100, 120 );
+
+        // All macros
+        JList< String > listAllMacros = new JList<>( modelAllMacros );
+        JScrollPane spAll = new JScrollPane( listAllMacros );
+        spAll.setSize( dimListSize );
+        pnlMacro.add( spAll, cs );
+
+        // Button to transfer them
+        JButton btnSendMacro = new JButton( ">>" );
+        cs.gridx = 3;
+        cs.gridy = 0;
+        pnlMacro.add( btnSendMacro, cs );
+
+        JButton btnTakeMacro = new JButton( "<<" );
+        cs.gridy = 1;
+        pnlMacro.add( btnTakeMacro, cs );
+
+        // Client's loaded macros
+        JList< String > listLoadedMacros = new JList<>( modelLoadedMacros );
+        cs.gridx = 4;
+        cs.gridy = 0;
+        JScrollPane spLoaded = new JScrollPane( listLoadedMacros );
+        spLoaded.setSize( dimListSize );
+        pnlMacro.add( spLoaded, cs );
+
+        return pnlMacro;
     }
 
     private void showAddComputerPane() {
@@ -574,8 +599,10 @@ public class App implements MacroSubscriber, ComputerSubscriber {
     public void updateComputer( Computer data ) {
 
         // Enable the info panel if it wasn't already
-        if ( !pnlInfo.isEnabled() )
+        if ( !pnlInfo.isEnabled() ) {
             pnlInfo.setEnabled( true );
+            pnlMacro.setEnabled( true );
+        }
 
         // Get a local copy of the details
         HashMap< String, String > dets = data.getDetails();
@@ -583,13 +610,17 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         // Set the computer name info label
         lblCompNameDisp.setText( data.getComputerName() );
 
+        // If we haven't connected yet, stop.
+        if ( dets.get( "CONNECTED?" ).equalsIgnoreCase( "NO" ) )
+            return;
+
+        lblHasClientInstalled.setText( "Yup" );
+
         // Set last access time
         Date d = Calendar.getInstance().getTime();
         String format = "HH:mm:ss";
         SimpleDateFormat sdf = new SimpleDateFormat( format );
         lblLastUpdateDisp.setText( sdf.format( d ) );
-        if ( dets.get( "CONNECTED?" ).equalsIgnoreCase( "NO" ) )
-            return;
 
         // Set OS label
         String infoOS = dets.get( "CONAM" ) + " " + dets.get( "CARCH" ) + dets.get( "CVERS" );
@@ -608,7 +639,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
 
         // Set Disk usage label
         String infoDisk = dets.get( "DISK-FREE" ) + " out of " + dets.get( "DISK-TOTAL" ) + " free";
-        lblMemUsageDisp.setText( infoDisk );
+        lblDiskUsageDisp.setText( infoDisk );
 
         frm.repaint();
     }

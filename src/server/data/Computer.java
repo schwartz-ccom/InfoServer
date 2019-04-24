@@ -114,6 +114,7 @@ public class Computer extends JLabel {
         this.details = s;
 
         this.setText( compName );
+        DataHandler.getInstance().alertSubscribers();
     }
 
     public HashMap< String, String > getDetails(){
@@ -124,8 +125,10 @@ public class Computer extends JLabel {
         return this.compName;
     }
 
-    private void setDataComputer() {
-        DataHandler.getInstance().setCurrentComputer( this );
+    public void setDataComputer() {
+        // Test whether or not we already are the target
+        if ( DataHandler.getInstance().getCurrentComputer() != this)
+            DataHandler.getInstance().setCurrentComputer( this );
     }
 
     // Purely display methods. Just puts a border around the currently selected computer.

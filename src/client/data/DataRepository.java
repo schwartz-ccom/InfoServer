@@ -1,6 +1,5 @@
-package client;
+package client.data;
 
-import client.data.Details;
 import server.data.macro.Macro;
 
 import java.util.HashMap;
@@ -19,25 +18,29 @@ public class DataRepository {
 
     private static DataRepository instance;
 
-    public static DataRepository getInstance(){
+    public static DataRepository getInstance() {
         if ( instance == null )
             instance = new DataRepository();
         return instance;
     }
-    private DataRepository(){
+
+    private DataRepository() {
 
     }
-    public void loadMacro( Macro toLoad ){
+
+    public void loadMacro( Macro toLoad ) {
         loadedMacros.put( toLoad.getMacroName(), toLoad );
     }
-    public void runMacro( String nameToRun ){
+
+    public void runMacro( String nameToRun ) {
         loadedMacros.get( nameToRun ).runMacro();
     }
 
-    public HashMap<String, String > getData(){
+    public HashMap< String, String > getData() {
         return data;
     }
-    public void refreshData(){
+
+    public void refreshData() {
         data = Details.getDetails();
     }
 }

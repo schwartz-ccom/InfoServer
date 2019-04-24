@@ -5,7 +5,9 @@ import res.Out;
 import com.sun.management.OperatingSystemMXBean;
 
 import java.io.File;
+import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 
 /**
@@ -18,7 +20,7 @@ public class Details {
 
     public static HashMap< String, String > getDetails(){
         HashMap< String, String > details = new HashMap<>();
-
+        bean = ( OperatingSystemMXBean ) ManagementFactory.getOperatingSystemMXBean();
         // Just a flag to avoid null pointer errors
         details.put( "CONNECTED?", "YES" );
 
@@ -39,7 +41,11 @@ public class Details {
 
         // Next, get all OS details ( RAM / Disk Space / CPU )
         details.put( "CPU-AMT", String.valueOf( bean.getAvailableProcessors() ) );
-        details.put( "CPU-USED", String.valueOf( bean.getSystemLoadAverage() ) );
+
+        // Run some things through a formatter since they can get ugly
+        DecimalFormat d = new DecimalFormat( "##.##" );
+
+        details.put( "CPU-USED", d.format( bean.getSystemLoadAverage() ) );
         details.put( "MEM-FREE", String.valueOf( bean.getFreePhysicalMemorySize() ) );
         details.put( "MEM-TOTAL", String.valueOf( bean.getTotalPhysicalMemorySize() ) );
 
@@ -52,7 +58,8 @@ public class Details {
     }
     private static String getComputerName(){
         try {
-            return InetAddress.getLocalHost().getHostName();
+            String host = InetAddress.getLocalHost().getHostName();
+            return ( host.substring( 0, 1 ).toUpperCase() + host.substring( 1 ).toLowerCase() );
         } catch( Exception e ){
             Out.printError( classId, "Couldn't get host name: " + e.getMessage() );
             return "NONAME?";

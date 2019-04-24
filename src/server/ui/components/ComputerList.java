@@ -1,6 +1,7 @@
 package server.ui.components;
 
 import server.data.Computer;
+import server.data.DataHandler;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -73,6 +74,14 @@ public class ComputerList extends JPanel {
                         pnlComp.add( Box.createHorizontalStrut( gapBetweenObjects ) );
                 }
             }
+        }
+
+        if ( comps.size() == 1 ){
+            // Kind of a shitty way to do it, but pretty much get the JLabel
+            // representing the computer to get the name of the just added comp,
+            // and then get the computer through that, and then set that computer as
+            // selected.
+            DataHandler.getInstance().getComputer( comps.get( 0 ).getText() ).setDataComputer();
         }
 
         currentRow = row;

@@ -49,6 +49,9 @@ public class StatusBar extends JLabel implements ComputerSubscriber, MacroSubscr
     @Override
     public void updateStatus( String mes ) {
         sMes = mes;
+        if ( mes.contains( "NO ACTIVITY" ) )
+            sMes = "No Network Activity / Disconnected";
+
         formatText();
     }
 

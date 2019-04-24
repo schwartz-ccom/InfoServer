@@ -1,5 +1,6 @@
 package server.data;
 
+import server.network.NetworkHandler;
 import server.resources.ComputerSubscriber;
 import server.ui.components.ComputerList;
 
@@ -9,7 +10,7 @@ import java.util.List;
 public class DataHandler {
 
     // The current computer with information
-    private Computer currentComputer;
+    private Computer currentComputer = null;
 
     // The master list of computers
     private List< Computer > allComputers;
@@ -31,8 +32,11 @@ public class DataHandler {
 
     void setCurrentComputer( Computer c ){
         // Unselect the current computer, and then select the new computer
-        if ( currentComputer != null )
+        if ( currentComputer != null ) {
             currentComputer.unselect();
+            if ( NetworkHandler.getInstance().isConnectedToComputer() )
+                NetworkHandler.getInstance().sendCommand( "GOODBYE" );
+        }
         this.currentComputer = c;
         currentComputer.select();
 
@@ -58,7 +62,7 @@ public class DataHandler {
         subscribers.add( sub );
     }
 
-    private void alertSubscribers(){
+    public void alertSubscribers(){
 
         // Go through the list of subscribers and tell them to update their data with
         // the current computer
