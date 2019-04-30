@@ -10,6 +10,7 @@ import javax.imageio.ImageIO;
 import javax.imageio.stream.ImageInputStream;
 import javax.swing.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -32,11 +33,10 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
     private Socket client;
     private ObjectInputStream in;
     private ObjectOutputStream out;
-    private ImageInputStream is;
+    private ImageInputStream imgIn;
 
     final private Queue< String > messageList = new LinkedList<>();
 
-    private boolean keepConnectionAlive = true;
     private boolean amAlive = false;
 
     private String classId = "NetworkHandler";
@@ -70,6 +70,8 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
      */
     public void run() {
 
+        boolean keepConnectionAlive = true;
+
         if ( ipToConnect.equalsIgnoreCase( "" ) ) {
             JOptionPane.showMessageDialog( null, "There is no target" );
             return;
@@ -89,9 +91,8 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
             // Create the object streams
             in = new ObjectInputStream( client.getInputStream() );
             out = new ObjectOutputStream( client.getOutputStream() );
-            is = ImageIO.createImageInputStream( client.getInputStream() );
+            imgIn = ImageIO.createImageInputStream( client.getInputStream() );
 
-            keepConnectionAlive = true;
             Out.printInfo( classId, "Connected." );
         } catch ( IOException ioe ) {
             Out.printInfo( classId, "Could not connect." );
@@ -101,29 +102,17 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
         alertStatSubscribers( compName + " is connected!" );
         try {
             amAlive = true;
-            Out.printInfo( classId, "Sending request..." );
+            Out.printInfo( classId, "Sending initial request..." );
 
-            write( "DETAILS" );
-            Object received = in.readObject();
-
-            HashMap< String, String > fromClient = null;
-            if ( received instanceof HashMap )
-                //noinspection unchecked
-                fromClient = ( HashMap< String, String > ) received;
-            else
-                Out.printError( classId, "Unexpected type from client" );
-
-            BufferedImage img = ImageIO.read( is );
-
-            DataHandler.getInstance().getCurrentComputer().setDetails( fromClient );
-            DataHandler.getInstance().getCurrentComputer().setImage( img );
+            messageList.add( "DETAILS" );
 
             // Wait on the user to send any commands they want
             while ( keepConnectionAlive ) {
-                Out.printInfo( classId, "Waiting for next message..." );
                 synchronized ( messageList ) {
-                    if ( messageList.isEmpty() )
+                    if ( messageList.isEmpty() ) {
+                        Out.printInfo( classId, "Waiting for next message..." );
                         messageList.wait();
+                    }
                 }
                 String mes = messageList.remove();
                 Out.printInfo( classId, "Message to send: " + mes );
@@ -138,12 +127,26 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
                 else if ( mes.startsWith( "RUN" ) ){
                     write( mes );
                 }
+                else if ( mes.equalsIgnoreCase( "DETAILS" ) ){
+                    write( "DETAILS" );
+                    Object read = in.readObject();
+                    RenderedImage img = ImageIO.read( imgIn );
+
+                    HashMap< String, String > details = null;
+                    if ( read instanceof HashMap )
+                        //noinspection unchecked
+                        details = ( HashMap< String, String > ) read;
+                    else
+                        Out.printError( classId, "Unexpected type from client" );
+
+                    DataHandler.getInstance().getCurrentComputer().setDetails( details );
+                    DataHandler.getInstance().getCurrentComputer().setImage( img );
+                    DataHandler.getInstance().alertSubscribers();
+
+                    Out.printInfo( classId, "Info from client received!" );
+                }
             }
-
-            Out.printInfo( classId, "Info from client received!" );
-
         } catch ( Exception e ) {
-            e.printStackTrace();
             Out.printError( classId, "Error: " + e.getMessage() );
         } finally {
             disconnect();

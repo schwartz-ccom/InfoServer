@@ -19,7 +19,12 @@ public class ScreenImager {
             Rectangle cap = new Rectangle( Toolkit.getDefaultToolkit().getScreenSize() );
 
             // Render it.
-            return r.createScreenCapture( cap );
+            RenderedImage ri = r.createScreenCapture( cap );
+
+            Out.printInfo( "ScreenImager", "Successfully captured screenshot" );
+            if ( ri == null )
+                Out.printError( "ScreenImager", "However, it was NULL" );
+            return ri;
 
         } catch ( Exception e ) {
             Out.printError("ScreenImager", "Something happened" );

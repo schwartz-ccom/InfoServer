@@ -8,21 +8,30 @@ import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 
 /**
  * Gets the computer's details and sends it back to the server
  */
-public class Details {
+class Details {
 
     private static String classId = "Details";
     private static OperatingSystemMXBean bean;
 
-    public static HashMap< String, String > getDetails(){
+    static HashMap< String, String > getDetails(){
         HashMap< String, String > details = new HashMap<>();
         bean = ( OperatingSystemMXBean ) ManagementFactory.getOperatingSystemMXBean();
         // Just a flag to avoid null pointer errors
         details.put( "CONNECTED?", "YES" );
+
+        // Set the last update time
+        Date d = Calendar.getInstance().getTime();
+        String format = "HH:mm:ss";
+        SimpleDateFormat sdf = new SimpleDateFormat( format );
+        details.put( "TIME", sdf.format( d ) );
 
         // Computer name
         details.put( "CNAME", getComputerName() );
@@ -43,9 +52,9 @@ public class Details {
         details.put( "CPU-AMT", String.valueOf( bean.getAvailableProcessors() ) );
 
         // Run some things through a formatter since they can get ugly
-        DecimalFormat d = new DecimalFormat( "##.##" );
+        DecimalFormat decFormat = new DecimalFormat( "##.##" );
 
-        details.put( "CPU-USED", d.format( bean.getSystemLoadAverage() ) );
+        details.put( "CPU-USED", decFormat.format( bean.getSystemCpuLoad() ) );
         details.put( "MEM-FREE", String.valueOf( bean.getFreePhysicalMemorySize() ) );
         details.put( "MEM-TOTAL", String.valueOf( bean.getTotalPhysicalMemorySize() ) );
 

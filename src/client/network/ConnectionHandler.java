@@ -5,6 +5,7 @@ import client.data.ScreenImager;
 import res.Out;
 import server.data.macro.Macro;
 
+import javax.imageio.IIOException;
 import javax.imageio.ImageIO;
 import javax.imageio.stream.ImageOutputStream;
 import java.awt.image.RenderedImage;
@@ -29,14 +30,14 @@ public class ConnectionHandler extends Thread {
         // One connection at a time!
         ServerSocket ss = null;
         try {
-            ss = new ServerSocket( 25566 );
+            ss = new ServerSocket( 25566, 50 );
+            Out.printInfo( classId, "Started Server Socket on port " + ss.getLocalPort() );
         } catch ( IOException ioe ){
             Out.printError( classId, "Could not start server socket: " + ioe.getMessage() );
             acceptingConnections = false;
         }
         while ( acceptingConnections ) {
             try {
-                Out.printInfo( classId, "Created server socket" );
                 Out.printInfo( classId, "Listening on " + InetAddress.getLocalHost() + ":" + 25566 );
                 Out.printInfo( classId, "Waiting for connection..." );
                 client = ss.accept();
@@ -57,22 +58,26 @@ public class ConnectionHandler extends Thread {
                 try {
                     Out.printInfo( classId, "Waiting for request..." );
                     Object ob = in.readObject();
-                    String mes;
                     if ( ob instanceof String ) {
-                        mes = ( String ) ob;
+                        String mes = ( String ) ob;
                         Out.printInfo( classId, "Message: " + mes );
                         if ( mes.contains( "DETAILS" ) ) {
                             // Client requests details, send them and a screenshot
                             write( DataRepository.getInstance().getData() );
 
                             RenderedImage im = ScreenImager.getScreenshot();
-
-                            ImageIO.write( im, "png", outImg );
-                            outImg.flush();
-                            out.flush();
+                            try {
+                                ImageIO.write( im, "png", outImg );
+                                outImg.flush();
+                            } catch ( NullPointerException npe ){
+                                Out.printError( classId, "IM was null" );
+                            } catch ( IIOException iioe ){
+                                Out.printError( classId, "Image Writing Error: " + iioe.getMessage() );
+                            }
+                            Out.printInfo( classId, "Successfully sent InfoServer details" );
                         }
                         else if ( mes.equalsIgnoreCase( "LOAD MACRO" ) ) {
-                            // We want to load the macro that is coming throught the pipeline
+                            // We want to load the macro that is coming through the pipeline
                             Object read = in.readObject();
                             if ( read instanceof Macro ) {
                                 DataRepository.getInstance().loadMacro( ( Macro ) read );
@@ -87,7 +92,6 @@ public class ConnectionHandler extends Thread {
                             //DataRepository.getInstance().runMacro( nameOfMacroToRun );
                         }
                         else if ( mes.startsWith( "RUN" ) ){
-                            Out.printInfo( classId, "RUN BASE" );
                             if ( !mes.substring( 4 ).isEmpty() )
                                 Runtime.getRuntime().exec( mes.substring( 4 ) );
                         }
@@ -99,6 +103,7 @@ public class ConnectionHandler extends Thread {
                 } catch ( ClassNotFoundException cnfe ) {
                     Out.printError( classId, "ClassNotFound Exception: " + cnfe.getMessage() );
                 } catch ( IOException ioe ){
+                    ioe.printStackTrace();
                     if ( ioe.getMessage().contains( "reset" ) )
                         transactionCompleted = true;
                     Out.printError( classId, "IO Exception: " + ioe.getMessage() );
@@ -108,8 +113,9 @@ public class ConnectionHandler extends Thread {
             try {
                 out.close();
                 in.close();
-                outImg.close();
+                //outImg.close();
                 client.close();
+                Out.printInfo( classId, "CLOSED STREAMS" );
             } catch ( IOException ioe ){
                 Out.printError( classId, "Could not close streams: " + ioe.getMessage() );
             }
@@ -121,7 +127,7 @@ public class ConnectionHandler extends Thread {
             out.writeObject( mes );
             out.flush();
         } catch ( IOException ioe ){
-            Out.printError( classId, "Could not send message: " + ioe.getMessage() );
+            Out.printError( classId, "write() could not send message: " + ioe.getMessage() );
         }
     }
 

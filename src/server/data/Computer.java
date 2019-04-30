@@ -9,6 +9,7 @@ import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.util.HashMap;
 
@@ -104,8 +105,9 @@ public class Computer extends JLabel {
 
     }
 
-    public void setImage( Image i ){
-        Image scaled = i.getScaledInstance( compIconSize.width, compIconSize.height, Image.SCALE_SMOOTH );
+    public void setImage( RenderedImage i ){
+        Image toScale = ( Image ) i;
+        Image scaled = toScale.getScaledInstance( compIconSize.width, compIconSize.height, Image.SCALE_SMOOTH );
         setIcon( new ImageIcon( scaled ) );
     }
 
@@ -114,7 +116,6 @@ public class Computer extends JLabel {
         this.details = s;
 
         this.setText( compName );
-        DataHandler.getInstance().alertSubscribers();
     }
 
     public HashMap< String, String > getDetails(){

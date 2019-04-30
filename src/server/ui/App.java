@@ -18,9 +18,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 
 /**
@@ -264,29 +262,51 @@ public class App implements MacroSubscriber, ComputerSubscriber {
 
         Dimension dimBtnPreferred = new Dimension( 180, 30 );
 
-        ConnectButton btnRefresh = new ConnectButton( "Connect" );
-        btnRefresh.setPreferredSize( dimBtnPreferred );
-        pnlInfo.add( btnRefresh, cs );
+        ConnectButton btnConnect = new ConnectButton( "Connect" );
+        btnConnect.setPreferredSize( dimBtnPreferred );
+        pnlInfo.add( btnConnect, cs );
 
         JButton btnMacro = new JButton( "Macros" );
         btnMacro.setPreferredSize( dimBtnPreferred );
         cs.gridx = 1;
         pnlInfo.add( btnMacro, cs );
 
-        JButton btnRunCmd = new JButton( "Run Command" );
-        btnRunCmd.setPreferredSize( dimBtnPreferred );
-        btnRunCmd.addActionListener( actionEvent -> {
-            String cmd = JOptionPane.showInputDialog( "Command to run on remote machine " );
-            if ( cmd != null )
-                NetworkHandler.getInstance().sendCommand( "RUN " + cmd );
-        } );
+        JButton btnRefresh = new JButton( "Refresh info" );
+        btnRefresh.setPreferredSize( dimBtnPreferred );
+        btnRefresh.addActionListener( actionEvent -> NetworkHandler.getInstance().sendCommand( "DETAILS" ) );
         cs.gridy = 9;
         cs.gridx = 0;
-        pnlInfo.add( btnRunCmd, cs );
+        pnlInfo.add( btnRefresh, cs );
 
         JButton btnMore = new JButton( "More Commands" );
         btnMore.setPreferredSize( dimBtnPreferred );
         cs.gridx = 1;
+        btnMore.addActionListener( actionEvent -> {
+
+            Object[] btnLabels = { "Okay" };
+
+            JLabel lblDesc = new JLabel( "Available commands:" );
+
+            JButton btnRunCmd = new JButton( "Run Command" );
+            btnRunCmd.addActionListener( event -> {
+                String cmd = JOptionPane.showInputDialog( "Command to run on remote machine " );
+                if ( cmd != null )
+                    NetworkHandler.getInstance().sendCommand( "RUN " + cmd );
+            } );
+
+            Object[] contents = { lblDesc, btnRunCmd };
+            JOptionPane.showOptionDialog(
+                    frm,
+                    contents,
+                    "Additional Commands",
+                    JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.INFORMATION_MESSAGE,
+                    null,
+                    btnLabels,
+                    btnLabels[ 0 ]
+            );
+
+        } );
         pnlInfo.add( btnMore, cs );
 
         pnlInfo.setMinimumSize( new Dimension( frm.getWidth() / 2, 300 ) );
@@ -305,12 +325,12 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         modelAllMacros = new DefaultListModel<>();
         modelLoadedMacros = new DefaultListModel<>();
 
-        Dimension dimListSize = new Dimension( 100, 120 );
+        Dimension dimListSize = new Dimension( 40, 120 );
 
         // All macros
         JList< String > listAllMacros = new JList<>( modelAllMacros );
         JScrollPane spAll = new JScrollPane( listAllMacros );
-        spAll.setSize( dimListSize );
+        spAll.setPreferredSize( dimListSize );
         pnlMacro.add( spAll, cs );
 
         // Button to transfer them
@@ -328,7 +348,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         cs.gridx = 4;
         cs.gridy = 0;
         JScrollPane spLoaded = new JScrollPane( listLoadedMacros );
-        spLoaded.setSize( dimListSize );
+        spLoaded.setPreferredSize( dimListSize );
         pnlMacro.add( spLoaded, cs );
 
         return pnlMacro;
@@ -623,10 +643,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         lblHasClientInstalled.setText( "Yup" );
 
         // Set last access time
-        Date d = Calendar.getInstance().getTime();
-        String format = "HH:mm:ss";
-        SimpleDateFormat sdf = new SimpleDateFormat( format );
-        lblLastUpdateDisp.setText( sdf.format( d ) );
+        lblLastUpdateDisp.setText( dets.get( "TIME" ) );
 
         // Set OS label
         String infoOS = dets.get( "CONAM" ) + " " + dets.get( "CARCH" ) + dets.get( "CVERS" );
@@ -640,7 +657,14 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         lblCPUUsageDisp.setText( infoCPU );
 
         // Set Memory usage label
-        String infoMem = dets.get( "MEM-FREE" ) + " out of " + dets.get( "MEM-TOTAL" ) + " free";
+        // But first, format that!
+        double freeMem = Double.valueOf( dets.get( "MEM-FREE") );
+        double totMem = Double.valueOf( dets.get( "MEM-TOTAL" ) );
+
+        String dispFreeMem = formatDouble( freeMem );
+        String dispTotaMem = formatDouble( totMem );
+
+        String infoMem = dispFreeMem + " out of " + dispTotaMem + " free";
         lblMemUsageDisp.setText( infoMem );
 
         // Set Disk usage label
@@ -648,5 +672,30 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         lblDiskUsageDisp.setText( infoDisk );
 
         frm.repaint();
+    }
+
+    /**
+     * Formats an input double as a string with two decimal places
+     * Called by updateComputer() for displaying RAM / Disk Space
+     * @param val The double to format
+     * @return A string representation of the double in the format ####.##
+     */
+    private String formatDouble( double val ) {
+        String ext = "B";
+        if ( val >= 1000 && val < 1000000 ) {
+            val = val / 1000;
+            ext = "KB";
+        }
+        else if ( val >= 1000000 && val < 1000000000 ){
+            val = val / 1000000;
+            ext = "MB";
+        }
+        else if ( val >= 1000000000 ){
+            val = val / 1000000000;
+            ext = "GB";
+        }
+        DecimalFormat decFormat = new DecimalFormat( "####.##" );
+        return decFormat.format( val ) + ext;
+
     }
 }

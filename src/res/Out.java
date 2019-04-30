@@ -1,5 +1,9 @@
 package res;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+
 /**
  * Out
  * A nice and easy way to track where the prints are coming from
@@ -7,10 +11,30 @@ package res;
  */
 public class Out {
 
+    private static boolean time = true;
+
     public static void printInfo( String classId, String msg ){
-        System.out.println( "[ " + classId + " ] " + msg );
+        if ( !time )
+            System.out.println( "[ " + classId + " ] " + msg );
+        else
+            System.out.println( "[ " + classId + " @ " + timeNow() + " ] " + msg );
     }
     public static void printError( String classId, String msg ){
-        System.err.println( "[ " + classId + " ] " + msg );
+        if ( !time )
+            System.err.println( "[ " + classId + " ] " + msg );
+        else
+            System.err.println( "[ " + classId + " @ " + timeNow() + " ] " + msg );
+    }
+    private static String timeNow(){
+        Date d = Calendar.getInstance().getTime();
+        String format = "HH:mm:ss.SSS";
+        SimpleDateFormat sdf = new SimpleDateFormat( format );
+        return sdf.format( d );
+    }
+    public static void enableTime(){
+        time = true;
+    }
+    public static void disableTime(){
+        time = false;
     }
 }

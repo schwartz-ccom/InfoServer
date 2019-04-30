@@ -11,7 +11,7 @@ import java.util.Map;
 public class DataRepository {
 
     // Get computer details initially.
-    private HashMap< String, String > data = Details.getDetails();
+    private HashMap< String, String > data;
 
     // Create a mapped list for the Macros.
     private Map< String, Macro > loadedMacros = new HashMap<>();
@@ -37,6 +37,7 @@ public class DataRepository {
     }
 
     public HashMap< String, String > getData() {
+        data = Details.getDetails();
         return data;
     }
 
