@@ -7,7 +7,6 @@ import server.data.macro.Macro;
 
 import javax.imageio.IIOException;
 import javax.imageio.ImageIO;
-import javax.imageio.stream.ImageOutputStream;
 import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -20,8 +19,8 @@ public class ConnectionHandler extends Thread {
 
     private ObjectOutputStream out;
     private ObjectInputStream in;
-    private ImageOutputStream outImg;
     private Socket client;
+    private final Object m = new Object();
 
     private String classId = this.getClass().getSimpleName();
     private boolean acceptingConnections = true;
@@ -43,7 +42,6 @@ public class ConnectionHandler extends Thread {
                 client = ss.accept();
 
                 out = new ObjectOutputStream( client.getOutputStream() );
-                outImg = ImageIO.createImageOutputStream( client.getOutputStream() );
 
                 in = new ObjectInputStream( client.getInputStream() );
                 Out.printInfo( classId, "InfoServer has connected and streams created" );
@@ -65,15 +63,12 @@ public class ConnectionHandler extends Thread {
                             // Client requests details, send them and a screenshot
                             write( DataRepository.getInstance().getData() );
 
+                            // Get the screenshot from ScreenImager
                             RenderedImage im = ScreenImager.getScreenshot();
-                            try {
-                                ImageIO.write( im, "png", outImg );
-                                outImg.flush();
-                            } catch ( NullPointerException npe ){
-                                Out.printError( classId, "IM was null" );
-                            } catch ( IIOException iioe ){
-                                Out.printError( classId, "Image Writing Error: " + iioe.getMessage() );
-                            }
+
+                            // Send the InfoServer the size for the byte array
+                            ImageIO.write( im, "png", client.getOutputStream() );
+
                             Out.printInfo( classId, "Successfully sent InfoServer details" );
                         }
                         else if ( mes.equalsIgnoreCase( "LOAD MACRO" ) ) {
@@ -113,7 +108,6 @@ public class ConnectionHandler extends Thread {
             try {
                 out.close();
                 in.close();
-                //outImg.close();
                 client.close();
                 Out.printInfo( classId, "CLOSED STREAMS" );
             } catch ( IOException ioe ){

@@ -7,13 +7,13 @@ import server.resources.ComputerSubscriber;
 import server.resources.NetworkStatusSubscriber;
 
 import javax.imageio.ImageIO;
-import javax.imageio.stream.ImageInputStream;
 import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.StreamCorruptedException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.*;
@@ -33,7 +33,6 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
     private Socket client;
     private ObjectInputStream in;
     private ObjectOutputStream out;
-    private ImageInputStream imgIn;
 
     final private Queue< String > messageList = new LinkedList<>();
 
@@ -91,7 +90,6 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
             // Create the object streams
             in = new ObjectInputStream( client.getInputStream() );
             out = new ObjectOutputStream( client.getOutputStream() );
-            imgIn = ImageIO.createImageInputStream( client.getInputStream() );
 
             Out.printInfo( classId, "Connected." );
         } catch ( IOException ioe ) {
@@ -129,25 +127,32 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
                 }
                 else if ( mes.equalsIgnoreCase( "DETAILS" ) ){
                     write( "DETAILS" );
-                    Object read = in.readObject();
-                    RenderedImage img = ImageIO.read( imgIn );
+                    Object read = null;
+                    try {
+                        read = in.readObject();
+                    } catch ( StreamCorruptedException sce ){
+                        Out.printError( classId, "Broken Stream" );
+                    }
+                    BufferedImage img = ImageIO.read( ImageIO.createImageInputStream( client.getInputStream() ) );
 
                     HashMap< String, String > details = null;
-                    if ( read instanceof HashMap )
+                    if ( read instanceof HashMap ) {
                         //noinspection unchecked
                         details = ( HashMap< String, String > ) read;
-                    else
+                        DataHandler.getInstance().getCurrentComputer().setDetails( details );
+                        DataHandler.getInstance().getCurrentComputer().setImage( img );
+                        DataHandler.getInstance().alertSubscribers();
+                        Out.printInfo( classId, "Info from client received!" );
+                    }
+                    else {
+                        Out.printInfo( classId, "READ == " + read );
                         Out.printError( classId, "Unexpected type from client" );
-
-                    DataHandler.getInstance().getCurrentComputer().setDetails( details );
-                    DataHandler.getInstance().getCurrentComputer().setImage( img );
-                    DataHandler.getInstance().alertSubscribers();
-
-                    Out.printInfo( classId, "Info from client received!" );
+                    }
                 }
             }
         } catch ( Exception e ) {
             Out.printError( classId, "Error: " + e.getMessage() );
+            e.printStackTrace();
         } finally {
             disconnect();
         }
