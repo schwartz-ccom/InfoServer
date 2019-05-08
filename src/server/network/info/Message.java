@@ -1,6 +1,7 @@
 package server.network.info;
 
 import res.Out;
+import server.data.macro.Macro;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -20,6 +21,7 @@ public class Message implements Serializable {
     // The data objects I'm more concerned about.
     private HashMap< String, String > info = null;
     private byte[] img = null;
+    private Macro macro = null;
     private String primaryCommand, secondayCommand = "";
 
     /**
@@ -46,6 +48,9 @@ public class Message implements Serializable {
     public void setSecondayCommand( String newCommand ){
         this.secondayCommand = newCommand;
     }
+    public void setMacro( Macro m ){
+        this.macro = m;
+    }
 
     // Getters for data vars
     public HashMap< String, String > getInfo(){
@@ -66,6 +71,9 @@ public class Message implements Serializable {
     }
     public String getSecondaryCommand(){
         return this.secondayCommand;
+    }
+    public Macro getMacro(){
+        return this.macro;
     }
 
     // Normal stuff

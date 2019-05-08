@@ -1,6 +1,7 @@
 package server.ui.components;
 
 import server.data.Computer;
+import server.data.ComputerAdder;
 import server.data.DataHandler;
 
 import javax.swing.*;
@@ -39,6 +40,8 @@ public class ComputerList extends JPanel {
         pnlComp = new JPanel();
         pnlComp.setLayout( new BoxLayout( pnlComp, BoxLayout.X_AXIS ) );
         pnlComp.setBorder( new TitledBorder( "Registered Systems" ) );
+
+        pnlComp.add( new ComputerAdder() );
 
         add( pnlComp, BorderLayout.CENTER );
 
@@ -83,6 +86,8 @@ public class ComputerList extends JPanel {
             // selected.
             DataHandler.getInstance().getComputer( comps.get( 0 ).getText() ).setDataComputer();
         }
+
+        pnlComp.add( new ComputerAdder() );
 
         currentRow = row;
         pnlComp.repaint();

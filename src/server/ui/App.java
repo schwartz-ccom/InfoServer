@@ -329,7 +329,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         modelAllMacros = new DefaultListModel<>();
         modelLoadedMacros = new DefaultListModel<>();
 
-        Dimension dimListSize = new Dimension( 40, 120 );
+        Dimension dimListSize = new Dimension( 180, 180 );
 
         // All macros
         JList< String > listAllMacros = new JList<>( modelAllMacros );
@@ -337,28 +337,30 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         spAll.setPreferredSize( dimListSize );
         pnlMacro.add( spAll, cs );
 
-        // Button to transfer them
-        JButton btnSendMacro = new JButton( ">>" );
-        cs.gridx = 3;
-        cs.gridy = 0;
-        pnlMacro.add( btnSendMacro, cs );
-
-        JButton btnTakeMacro = new JButton( "<<" );
-        cs.gridy = 1;
-        pnlMacro.add( btnTakeMacro, cs );
-
         // Client's loaded macros
         JList< String > listLoadedMacros = new JList<>( modelLoadedMacros );
-        cs.gridx = 4;
+        cs.gridx = 1;
         cs.gridy = 0;
         JScrollPane spLoaded = new JScrollPane( listLoadedMacros );
         spLoaded.setPreferredSize( dimListSize );
         pnlMacro.add( spLoaded, cs );
 
+        // Button to transfer them
+        JButton btnSendMacro = new JButton( "Load" );
+        cs.gridx = 0;
+        cs.gridy = 1;
+        pnlMacro.add( btnSendMacro, cs );
+
+        JButton btnTakeMacro = new JButton( "Unload" );
+        cs.gridx = 1;
+        pnlMacro.add( btnTakeMacro, cs );
+
+
         return pnlMacro;
     }
 
-    private void showAddComputerPane() {
+    // Called by ComputerAdder and the MenuItem
+    public void showAddComputerPane() {
         // Button labels
         Object[] btnLabels = { "Connect", "Cancel" };
 
@@ -571,15 +573,23 @@ public class App implements MacroSubscriber, ComputerSubscriber {
      */
     @Override
     public void updateMacros( Macro[] macros ) {
+
+        // Remove macros from the menu list to avoid duplicates
         mnMacro.removeAll();
         mnMacro.add( mniCreateMacro );
         mnMacro.add( mniImport );
         mnMacro.add( mniExport );
         mnMacro.addSeparator();
 
+        // Remove macros from the editor combobox
         cbxMacros.removeAllItems();
         cbxMacros.addItem( "Choose a Macro" );
 
+        // Clear out the list of macros first so there aren't duplicates
+        modelAllMacros.removeAllElements();
+
+        // Now go through each one and assign it properties.
+        // This is where the menu showing all the steps and the buttons are added
         for ( Macro m : macros ) {
             JMenuItem temp = new JMenuItem( m.getMacroName() );
             temp.addActionListener( actionEvent -> {

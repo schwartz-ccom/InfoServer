@@ -122,12 +122,6 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
                     disconnect();
                     keepConnectionAlive = false;
                 }
-                else if ( mes.getPrimaryCommand().equalsIgnoreCase( "RUN MACRO" ) ){
-
-                }
-                else if ( mes.getPrimaryCommand().equalsIgnoreCase( "RUN" ) ){
-                    write( mes );
-                }
                 else if ( mes.getPrimaryCommand().equalsIgnoreCase( "DETAILS" ) ){
                     write( mes );
                     Object read = null;
@@ -146,6 +140,8 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
                         Out.printError( classId, "Unexpected type from client" );
                     }
                 }
+                else
+                    write( mes );
             }
         } catch ( Exception e ) {
             Out.printError( classId, "Error: " + e.getMessage() );
