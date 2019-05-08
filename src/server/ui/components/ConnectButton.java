@@ -3,6 +3,7 @@ package server.ui.components;
 import server.data.Computer;
 import server.data.DataHandler;
 import server.network.NetworkHandler;
+import server.network.info.Message;
 import server.resources.NetworkStatusSubscriber;
 
 import javax.swing.*;
@@ -51,7 +52,7 @@ public class ConnectButton extends JButton implements NetworkStatusSubscriber {
     }
 
     private void disconnectFromComputer() {
-        NetworkHandler.getInstance().sendCommand( "GOODBYE" );
+        NetworkHandler.getInstance().sendCommand( new Message( "GOODBYE" ) );
         setStatus( 0 );
     }
     @Override

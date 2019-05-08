@@ -35,13 +35,4 @@ public class DataRepository {
     public void runMacro( String nameToRun ) {
         loadedMacros.get( nameToRun ).runMacro();
     }
-
-    public HashMap< String, String > getData() {
-        data = Details.getDetails();
-        return data;
-    }
-
-    public void refreshData() {
-        data = Details.getDetails();
-    }
 }

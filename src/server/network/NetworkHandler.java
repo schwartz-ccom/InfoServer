@@ -3,6 +3,7 @@ package server.network;
 import res.Out;
 import server.data.Computer;
 import server.data.DataHandler;
+import server.network.info.Message;
 import server.resources.ComputerSubscriber;
 import server.resources.NetworkStatusSubscriber;
 
@@ -34,7 +35,7 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
     private ObjectInputStream in;
     private ObjectOutputStream out;
 
-    final private Queue< String > messageList = new LinkedList<>();
+    final private Queue< Message > messageList = new LinkedList<>();
 
     private boolean amAlive = false;
 
@@ -102,50 +103,46 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
             amAlive = true;
             Out.printInfo( classId, "Sending initial request..." );
 
-            messageList.add( "DETAILS" );
+            messageList.add( new Message( "DETAILS" ) );
 
             // Wait on the user to send any commands they want
             while ( keepConnectionAlive ) {
                 synchronized ( messageList ) {
+                    // If the messageList is empty, wait on the list to be filled
+                    // Doing this reduces CPU cycles, as opposed to a while loop.
                     if ( messageList.isEmpty() ) {
                         Out.printInfo( classId, "Waiting for next message..." );
                         messageList.wait();
                     }
                 }
-                String mes = messageList.remove();
+                Message mes = messageList.remove();
                 Out.printInfo( classId, "Message to send: " + mes );
-                if ( mes.equals( "GOODBYE" ) ){
+                if ( mes.getPrimaryCommand().equalsIgnoreCase( "GOODBYE" ) ){
                     write( mes );
                     disconnect();
                     keepConnectionAlive = false;
                 }
-                else if ( mes.startsWith( "RUN MACRO" ) ){
+                else if ( mes.getPrimaryCommand().equalsIgnoreCase( "RUN MACRO" ) ){
 
                 }
-                else if ( mes.startsWith( "RUN" ) ){
+                else if ( mes.getPrimaryCommand().equalsIgnoreCase( "RUN" ) ){
                     write( mes );
                 }
-                else if ( mes.equalsIgnoreCase( "DETAILS" ) ){
-                    write( "DETAILS" );
+                else if ( mes.getPrimaryCommand().equalsIgnoreCase( "DETAILS" ) ){
+                    write( mes );
                     Object read = null;
                     try {
                         read = in.readObject();
                     } catch ( StreamCorruptedException sce ){
                         Out.printError( classId, "Broken Stream" );
                     }
-                    BufferedImage img = ImageIO.read( ImageIO.createImageInputStream( client.getInputStream() ) );
-
-                    HashMap< String, String > details = null;
-                    if ( read instanceof HashMap ) {
-                        //noinspection unchecked
-                        details = ( HashMap< String, String > ) read;
-                        DataHandler.getInstance().getCurrentComputer().setDetails( details );
-                        DataHandler.getInstance().getCurrentComputer().setImage( img );
+                    if ( read instanceof Message ) {
+                        DataHandler.getInstance().getCurrentComputer().setDetails( ( ( Message ) read ).getInfo() );
+                        DataHandler.getInstance().getCurrentComputer().setImage( ( ( Message ) read ).getImg() );
                         DataHandler.getInstance().alertSubscribers();
                         Out.printInfo( classId, "Info from client received!" );
                     }
                     else {
-                        Out.printInfo( classId, "READ == " + read );
                         Out.printError( classId, "Unexpected type from client" );
                     }
                 }
@@ -158,9 +155,9 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
         }
     }
 
-    private void write( String message ) {
+    private void write( Message m ) {
         try {
-            out.writeObject( message );
+            out.writeObject( m );
             out.flush();
         } catch ( IOException ioe ){
             Out.printError( classId, "Could not send message: " + ioe.getMessage() );
@@ -190,7 +187,7 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
     public boolean isConnectedToComputer(){
         return amAlive;
     }
-    public void sendCommand( String mes ) {
+    public void sendCommand( Message mes ) {
         // Get the lock for message list and notify anything waiting on it
         synchronized ( messageList ) {
             messageList.add( mes );

@@ -16,14 +16,19 @@ import java.util.HashMap;
 /**
  * Gets the computer's details and sends it back to the server
  */
-class Details {
+public class Details {
 
-    private static String classId = "Details";
-    private static OperatingSystemMXBean bean;
+    private static HashMap< String, String > details;
 
-    static HashMap< String, String > getDetails(){
-        HashMap< String, String > details = new HashMap<>();
-        bean = ( OperatingSystemMXBean ) ManagementFactory.getOperatingSystemMXBean();
+    public static HashMap< String, String > getDetails(){
+        // Create the hashmap to store stuff
+        details = null;
+        details = new HashMap<>();
+
+        // Set up the OS bean to get info
+        OperatingSystemMXBean bean =
+                ( OperatingSystemMXBean ) ManagementFactory.getOperatingSystemMXBean();
+
         // Just a flag to avoid null pointer errors
         details.put( "CONNECTED?", "YES" );
 
@@ -70,7 +75,7 @@ class Details {
             String host = InetAddress.getLocalHost().getHostName();
             return ( host.substring( 0, 1 ).toUpperCase() + host.substring( 1 ).toLowerCase() );
         } catch( Exception e ){
-            Out.printError( classId, "Couldn't get host name: " + e.getMessage() );
+            Out.printError( "Details", "Couldn't get host name: " + e.getMessage() );
             return "NONAME?";
         }
     }

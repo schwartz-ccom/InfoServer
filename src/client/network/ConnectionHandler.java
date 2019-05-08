@@ -1,13 +1,13 @@
 package client.network;
 
 import client.data.DataRepository;
+import client.data.Details;
 import client.data.ScreenImager;
 import res.Out;
 import server.data.macro.Macro;
+import server.network.info.Message;
 
-import javax.imageio.IIOException;
-import javax.imageio.ImageIO;
-import java.awt.image.RenderedImage;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -20,14 +20,13 @@ public class ConnectionHandler extends Thread {
     private ObjectOutputStream out;
     private ObjectInputStream in;
     private Socket client;
-    private final Object m = new Object();
 
     private String classId = this.getClass().getSimpleName();
-    private boolean acceptingConnections = true;
 
     public ConnectionHandler() {
         // One connection at a time!
         ServerSocket ss = null;
+        boolean acceptingConnections = true;
         try {
             ss = new ServerSocket( 25566, 50 );
             Out.printInfo( classId, "Started Server Socket on port " + ss.getLocalPort() );
@@ -55,23 +54,26 @@ public class ConnectionHandler extends Thread {
                 // Receive request for data, and then the image request
                 try {
                     Out.printInfo( classId, "Waiting for request..." );
-                    Object ob = in.readObject();
-                    if ( ob instanceof String ) {
-                        String mes = ( String ) ob;
-                        Out.printInfo( classId, "Message: " + mes );
-                        if ( mes.contains( "DETAILS" ) ) {
+                    Object ob = null;
+                    try {
+                        ob = in.readObject();
+                    } catch ( EOFException eofe ){
+                        transactionCompleted = true;
+                        break;
+                    }
+                    if ( ob instanceof Message ) {
+                        Message mes = ( Message ) ob;
+                        Out.printInfo( classId, mes.toString() );
+                        if ( mes.getPrimaryCommand().contains( "DETAILS" ) ) {
                             // Client requests details, send them and a screenshot
-                            write( DataRepository.getInstance().getData() );
+                            mes.setInfo( Details.getDetails() );
+                            mes.setImg( ScreenImager.getScreenshot() );
 
-                            // Get the screenshot from ScreenImager
-                            RenderedImage im = ScreenImager.getScreenshot();
-
-                            // Send the InfoServer the size for the byte array
-                            ImageIO.write( im, "png", client.getOutputStream() );
+                            write( mes );
 
                             Out.printInfo( classId, "Successfully sent InfoServer details" );
                         }
-                        else if ( mes.equalsIgnoreCase( "LOAD MACRO" ) ) {
+                        else if ( mes.getPrimaryCommand().equalsIgnoreCase( "LOAD MACRO" ) ) {
                             // We want to load the macro that is coming through the pipeline
                             Object read = in.readObject();
                             if ( read instanceof Macro ) {
@@ -80,17 +82,17 @@ public class ConnectionHandler extends Thread {
                             else
                                 Out.printError( classId, "Unexpected object sent through pipe." );
                         }
-                        else if ( mes.startsWith( "RUN MACRO" ) ) {
+                        else if ( mes.getPrimaryCommand().startsWith( "RUN MACRO" ) ) {
                             // Run whichever macro was specified after MACRO ( 1 -> x )
-                            String nameOfMacroToRun = mes.substring( 11 );
+                            String nameOfMacroToRun = mes.getSecondaryCommand();
                             Out.printInfo( classId, "Running macro: " + nameOfMacroToRun );
                             //DataRepository.getInstance().runMacro( nameOfMacroToRun );
                         }
-                        else if ( mes.startsWith( "RUN" ) ){
-                            if ( !mes.substring( 4 ).isEmpty() )
-                                Runtime.getRuntime().exec( mes.substring( 4 ) );
+                        else if ( mes.getPrimaryCommand().equalsIgnoreCase( "RUN" ) ){
+                            if ( !mes.getSecondaryCommand().equals( "" ) )
+                                Runtime.getRuntime().exec( mes.getSecondaryCommand() );
                         }
-                        else if ( mes.contains( "GOODBYE" ) ) {
+                        else if ( mes.getPrimaryCommand().contains( "GOODBYE" ) ) {
                             // Client is disconnecting ( Server is switching computers )
                             transactionCompleted = true;
                         }
@@ -98,7 +100,6 @@ public class ConnectionHandler extends Thread {
                 } catch ( ClassNotFoundException cnfe ) {
                     Out.printError( classId, "ClassNotFound Exception: " + cnfe.getMessage() );
                 } catch ( IOException ioe ){
-                    ioe.printStackTrace();
                     if ( ioe.getMessage().contains( "reset" ) )
                         transactionCompleted = true;
                     Out.printError( classId, "IO Exception: " + ioe.getMessage() );
@@ -116,7 +117,7 @@ public class ConnectionHandler extends Thread {
         }
     }
 
-    private void write( Object mes ){
+    private void write( Message mes ){
         try {
             out.writeObject( mes );
             out.flush();

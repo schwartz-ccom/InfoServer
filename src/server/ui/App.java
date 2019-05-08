@@ -7,6 +7,7 @@ import server.data.MousePositionHandler;
 import server.data.macro.MacroHandler;
 import server.network.NetworkHandler;
 import server.data.macro.Macro;
+import server.network.info.Message;
 import server.resources.ComputerSubscriber;
 import server.resources.MacroSubscriber;
 import server.ui.components.ComputerList;
@@ -87,7 +88,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
     }
 
     private void createGUI() {
-        frm = new JFrame( "Info Server - CONFIDENTIAL MARK 2 - WISCONSIN" );
+        frm = new JFrame( "Info Server - CONFIDENTIAL MARK 3 - IDAHO" );
         frm.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
         frm.setLayout( new BorderLayout( 4, 4 ) );
         frm.setSize( new Dimension( 850, 600 ) );
@@ -273,7 +274,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
 
         JButton btnRefresh = new JButton( "Refresh info" );
         btnRefresh.setPreferredSize( dimBtnPreferred );
-        btnRefresh.addActionListener( actionEvent -> NetworkHandler.getInstance().sendCommand( "DETAILS" ) );
+        btnRefresh.addActionListener( actionEvent -> NetworkHandler.getInstance().sendCommand( new Message( "DETAILS" ) ) );
         cs.gridy = 9;
         cs.gridx = 0;
         pnlInfo.add( btnRefresh, cs );
@@ -290,8 +291,11 @@ public class App implements MacroSubscriber, ComputerSubscriber {
             JButton btnRunCmd = new JButton( "Run Command" );
             btnRunCmd.addActionListener( event -> {
                 String cmd = JOptionPane.showInputDialog( "Command to run on remote machine " );
-                if ( cmd != null )
-                    NetworkHandler.getInstance().sendCommand( "RUN " + cmd );
+                if ( cmd != null ) {
+                    Message m = new Message( "RUN" );
+                    m.setSecondayCommand( cmd );
+                    NetworkHandler.getInstance().sendCommand( m );
+                }
             } );
 
             Object[] contents = { lblDesc, btnRunCmd };
@@ -670,6 +674,8 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         // Set Disk usage label
         String infoDisk = dets.get( "DISK-FREE" ) + " out of " + dets.get( "DISK-TOTAL" ) + " free";
         lblDiskUsageDisp.setText( infoDisk );
+
+        Out.printInfo( getClass().getSimpleName(), "Updated client information" );
 
         frm.repaint();
     }

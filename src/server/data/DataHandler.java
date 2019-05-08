@@ -1,6 +1,7 @@
 package server.data;
 
 import server.network.NetworkHandler;
+import server.network.info.Message;
 import server.resources.ComputerSubscriber;
 import server.ui.components.ComputerList;
 
@@ -35,7 +36,7 @@ public class DataHandler {
         if ( currentComputer != null ) {
             currentComputer.unselect();
             if ( NetworkHandler.getInstance().isConnectedToComputer() )
-                NetworkHandler.getInstance().sendCommand( "GOODBYE" );
+                NetworkHandler.getInstance().sendCommand( new Message( "GOODBYE" ) );
         }
         this.currentComputer = c;
         currentComputer.select();
