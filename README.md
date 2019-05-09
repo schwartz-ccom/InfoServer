@@ -13,6 +13,9 @@ navigate some dumb menus, and then walk all the way back when you can set
 up a macro and have it do it on it's own, as well as check how the machine is
 doing from right at your desk?
 
+## Can I use it on any platform?
+As long as you have Java 10+ installed, absolutely.
+
 ## What version are we at?
 Release 1 Beta 1
 
