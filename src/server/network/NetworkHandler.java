@@ -6,11 +6,9 @@ import server.data.DataHandler;
 import server.network.info.Message;
 import server.resources.ComputerSubscriber;
 import server.resources.NetworkStatusSubscriber;
+import server.ui.App;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
-import java.awt.image.BufferedImage;
-import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -95,7 +93,7 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
             Out.printInfo( classId, "Connected." );
         } catch ( IOException ioe ) {
             Out.printInfo( classId, "Could not connect." );
-            alertStatSubscribers( compName + " is not available!" );
+            alertStatSubscribers( compName + " is not available! Is it running?" );
             return;
         }
         alertStatSubscribers( compName + " is connected!" );
@@ -133,12 +131,33 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
                     if ( read instanceof Message ) {
                         DataHandler.getInstance().getCurrentComputer().setDetails( ( ( Message ) read ).getInfo() );
                         DataHandler.getInstance().getCurrentComputer().setImage( ( ( Message ) read ).getImg() );
+                        App.getInstance().updateLoadedMacros( ( ( Message ) read ).getSecondaryCommand() );
                         DataHandler.getInstance().alertSubscribers();
                         Out.printInfo( classId, "Info from client received!" );
                     }
                     else {
                         Out.printError( classId, "Unexpected type from client" );
                     }
+                }
+                else if ( mes.getPrimaryCommand().equalsIgnoreCase( "GET MACROS" ) ){
+                    // Write the message, and since we expect input, capture the next input
+                    if ( mes.getSecondaryCommand().isEmpty() )
+                        break;
+                    write( mes );
+
+                    Object read = null;
+                    try {
+                        read = in.readObject();
+                    } catch ( StreamCorruptedException sce ){
+                        Out.printError( classId, "Broken Stream" );
+                    }
+
+                    // Just to verify. Never hurts to have error detection
+                    if ( read instanceof Message ){
+                        App.getInstance().updateLoadedMacros( ( ( Message ) read ).getSecondaryCommand() );
+                    }
+                    else
+                        Out.printError( classId, "Unknown type from client" );
                 }
                 else
                     write( mes );

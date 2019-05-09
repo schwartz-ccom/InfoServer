@@ -18,12 +18,9 @@ import java.util.HashMap;
  */
 public class Details {
 
-    private static HashMap< String, String > details;
-
-    public static HashMap< String, String > getDetails(){
+    public HashMap< String, String > getDetails(){
         // Create the hashmap to store stuff
-        details = null;
-        details = new HashMap<>();
+        HashMap< String, String > details = new HashMap<>();
 
         // Set up the OS bean to get info
         OperatingSystemMXBean bean =

@@ -61,6 +61,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
 
     private JComboBox< String > cbxMacros;
     private JLabel lblMousePosition;
+
     private static App instance;
 
     public static App getInstance() {
@@ -88,10 +89,11 @@ public class App implements MacroSubscriber, ComputerSubscriber {
     }
 
     private void createGUI() {
-        frm = new JFrame( "Info Server - CONFIDENTIAL MARK 3 - IDAHO" );
+        frm = new JFrame( "Info Server - Release 1 - VANILLA" );
         frm.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
         frm.setLayout( new BorderLayout( 4, 4 ) );
-        frm.setSize( new Dimension( 850, 600 ) );
+        frm.setSize( new Dimension( 850, 620 ) );
+        frm.setMinimumSize( frm.getSize() );
         frm.addComponentListener( new ComponentAdapter() {
             @Override
             public void componentResized( ComponentEvent e ) {
@@ -107,9 +109,11 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         // Create the general menu
         mnGeneral = new JMenu( "App" );
         mniAddComputer = new JMenuItem( "Add a Computer on the network" );
+        JMenuItem mniSubmitFeature = new JMenuItem( "Request a feature / QoL improvement" );
         mniSettings = new JMenuItem( "Settings" );
 
         mnGeneral.add( mniAddComputer );
+        mnGeneral.add( mniSubmitFeature );
         mnGeneral.add( mniSettings );
 
         // Create the macro menu
@@ -146,10 +150,19 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         // Create the information panel
         pnlInfo = makeInfoPanel();
         pnlInfo.setEnabled( false );
+
+        for ( Component c: pnlInfo.getComponents() ){
+            c.setEnabled( false );
+        }
+
         frm.add( pnlInfo, BorderLayout.WEST );
 
         pnlMacro = makeMacroSelectPanel();
         pnlMacro.setEnabled( false );
+        for ( Component c: pnlMacro.getComponents() ){
+            c.setEnabled( false );
+        }
+
         frm.add( pnlMacro, BorderLayout.CENTER );
 
         // Add event handlers
@@ -158,6 +171,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         mniCreateMacro.addActionListener( actionEvent -> showMacroPane() );
         mniExport.addActionListener( actionEvent -> MacroHandler.getInstance().saveAllToFile() );
         mniImport.addActionListener( actionEvent -> MacroHandler.getInstance().getMacrosFromFile() );
+        mniSubmitFeature.addActionListener( actionEvent -> showSuggestionPane() );
 
         // Set the menu bar
         frm.setJMenuBar( mbMenu );
@@ -331,6 +345,16 @@ public class App implements MacroSubscriber, ComputerSubscriber {
 
         Dimension dimListSize = new Dimension( 180, 180 );
 
+        JLabel lblMasterList = new JLabel( "Available Macros to Load: " );
+        pnlMacro.add( lblMasterList, cs );
+
+        JLabel lblClientList = new JLabel( "Client's loaded Macros: " );
+        cs.gridx = 1;
+        pnlMacro.add( lblClientList, cs);
+
+        cs.gridx = 0;
+        cs.gridy = 1;
+
         // All macros
         JList< String > listAllMacros = new JList<>( modelAllMacros );
         JScrollPane spAll = new JScrollPane( listAllMacros );
@@ -340,23 +364,75 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         // Client's loaded macros
         JList< String > listLoadedMacros = new JList<>( modelLoadedMacros );
         cs.gridx = 1;
-        cs.gridy = 0;
+
         JScrollPane spLoaded = new JScrollPane( listLoadedMacros );
         spLoaded.setPreferredSize( dimListSize );
+        listLoadedMacros.addMouseListener( new MouseAdapter() {
+            @Override
+            public void mousePressed( MouseEvent e ) {
+                // If double click, run macro
+                if ( e.getButton() == MouseEvent.BUTTON3 ){
+                    // Create the message
+                    Message m = new Message( "RUN MACRO" );
+
+                    // Add the macro to run as the secondary
+                    m.setSecondayCommand( listLoadedMacros.getSelectedValue() );
+
+                    // Queue it
+                    NetworkHandler.getInstance().sendCommand( m );
+                }
+            }
+        } );
         pnlMacro.add( spLoaded, cs );
 
         // Button to transfer them
         JButton btnSendMacro = new JButton( "Load" );
         cs.gridx = 0;
-        cs.gridy = 1;
+        cs.gridy = 2;
+
+        // Create a message with the selected macro and send it to the client
+        btnSendMacro.addActionListener( actionEvent -> {
+            // Make the message
+            Message m = new Message( "LOAD MACRO" );
+
+            // Get the macro from MacroHandler using the selected text
+            Macro toSend = MacroHandler.getInstance().getMacro( listAllMacros.getSelectedValue() );
+
+            // Set the macro in the message
+            m.setMacro( toSend );
+
+            // Then queue the message to be sent
+            NetworkHandler.getInstance().sendCommand( m );
+
+            // Update macro list
+            updateClientServerMacros();
+        } );
         pnlMacro.add( btnSendMacro, cs );
 
         JButton btnTakeMacro = new JButton( "Unload" );
         cs.gridx = 1;
+        btnTakeMacro.addActionListener( actionEvent -> {
+            // Create the message
+            Message m = new Message( "REVOKE MACRO" );
+            m.setSecondayCommand( listLoadedMacros.getSelectedValue() );
+
+            // Queue message
+            NetworkHandler.getInstance().sendCommand( m );
+
+            // Update the macro list
+            updateClientServerMacros();
+        } );
         pnlMacro.add( btnTakeMacro, cs );
 
-
         return pnlMacro;
+    }
+
+    /**
+     * Responsible for updating the two macro lists on the UI
+     */
+    private void updateClientServerMacros() {
+        Message m = new Message( "GET MACROS" );
+        NetworkHandler.getInstance().sendCommand( m );
     }
 
     // Called by ComputerAdder and the MenuItem
@@ -385,18 +461,64 @@ public class App implements MacroSubscriber, ComputerSubscriber {
 
         if ( status == 0 ) {
             String name = txtName.getText();
-            if ( name.isEmpty() ) {
+            if ( name.isEmpty() )
                 return;
-            }
             try {
                 String address = InetAddress.getByName( name ).getHostAddress();
-                System.out.println( "Address of " + name + ": " + address );
                 Computer c = new Computer( name, address );
                 DataHandler.getInstance().addComputer( c );
 
             } catch ( UnknownHostException e ) {
-                JOptionPane.showMessageDialog( frm, "Could not find hostname " + name );
+                JOptionPane.showMessageDialog( frm, "Could not find host named " + name );
             }
+        }
+    }
+
+    private void showSuggestionPane(){
+
+        Object[] btnLabels = { "Submit", "Cancel" };
+
+        JLabel lblSuggest = new JLabel( "What are you looking for?" );
+        JRadioButton rbQoL = new JRadioButton( "Quality of Life Improvement" );
+        JRadioButton rbFeature = new JRadioButton( "Feature Request" );
+        JRadioButton rbBug = new JRadioButton( "Bug Report" );
+
+        rbFeature.setSelected( true );
+
+        // Create a button group so the other radio buttons get deselected when one is pressed.
+        ButtonGroup bg = new ButtonGroup();
+        bg.add( rbQoL );
+        bg.add( rbFeature );
+        bg.add( rbBug );
+
+        JTextArea txtNotes = new JTextArea();
+        txtNotes.setWrapStyleWord( true );
+
+        JScrollPane sp = new JScrollPane( txtNotes );
+        sp.createVerticalScrollBar();
+        sp.setPreferredSize( new Dimension( 360, 360 ) );
+
+        Object[] uiElements = { lblSuggest, rbFeature, rbQoL, rbBug, sp };
+
+        int status = JOptionPane.showOptionDialog(
+                frm,
+                uiElements,
+                "Suggestions",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                btnLabels,
+                btnLabels[ 0 ]
+        );
+        if ( status == 0 ){
+            int what = 0;
+            if ( rbQoL.isSelected() )
+                what = 1;
+            else if ( rbBug.isSelected() )
+                what = 2;
+            String response = txtNotes.getText();
+            Out.printInfo( getClass().getSimpleName(), "User requested: " + what + ": " + response );
+            JOptionPane.showMessageDialog( frm, "Thank you!\n\nChris has received your response and is looking into it" );
         }
     }
 
@@ -467,8 +589,17 @@ public class App implements MacroSubscriber, ComputerSubscriber {
             @Override
             public void keyPressed( KeyEvent e ) {
                 if ( e.isControlDown() && e.isShiftDown() ) {
-                    Point toInsert = MousePositionHandler.getMouseLoc();
-                    txtMacroEditor.append( "MOUSE MOVE " + toInsert.x + " " + toInsert.y + "\n" );
+                    int cLoc = txtMacroEditor.getCaretPosition();
+                    if ( e.getKeyCode() == KeyEvent.VK_A ) {
+                        Point toInsert = MousePositionHandler.getMouseLoc();
+                        txtMacroEditor.insert( "MOUSE MOVE " + toInsert.x + " " + toInsert.y + "\n", cLoc );
+                    }
+                    else if ( e.getKeyCode() == KeyEvent.VK_S ){
+                        txtMacroEditor.insert( "MOUSE PRESS 1\n", cLoc );
+                    }
+                    else if ( e.getKeyCode() == KeyEvent.VK_D ){
+                        txtMacroEditor.insert( "DELAY 50\n", cLoc );
+                    }
                 }
             }
         } );
@@ -545,11 +676,16 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         String help = "MOUSE MOVE [ x_coordinate ] [ y_coordinate ]\n" +
                 "MOUSE PRESS [ mouse_button ]\n" +
                 "KEY PRESS [ key_code ]\n" +
+                "               1 = left click\n" +
+                "               3 = right click\n" +
+                "               2 = middle click\n" +
                 "TYPE [ string_to_type ]\n" +
                 "RUN [ path_as_string ]\n" +
                 "DELAY [ time_in_milliseconds ]\n" +
                 "REPEAT [ times_to_repeat_macro ]\n\n" +
-                "CTRL + SHIFT will insert a MOUSE MOVE x y\n\n" +
+                "CTRL + SHIFT + A will insert a 'MOUSE MOVE x y'\n" +
+                "CTRL + SHIFT + S will insert 'MOUSE PRESS 1'\n" +
+                "CTRL + SHIFT + D will insert a 'DELAY 50'\n\n" +
                 "Note: These are in caps, but the commands are not\n" +
                 "case sensitive. That being said, you should probably adopt\n" +
                 "a style and either go full upper or lower case.";
@@ -558,7 +694,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         macroInfoFrame.setLocation( frm.getX() + frm.getWidth() + 30, frm.getY() );
 
         JTextArea e = new JTextArea( help );
-        e.setPreferredSize( new Dimension( 400, 200 ) );
+        e.setPreferredSize( new Dimension( 400, 350 ) );
 
         macroInfoFrame.add( e );
         macroInfoFrame.setDefaultCloseOperation( JFrame.DISPOSE_ON_CLOSE );
@@ -624,9 +760,31 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         }
     }
 
+    /**
+     * Updates the mouse locator on the CreateMacroPane
+     * Called by MousePositionHandler
+     * @param x the X cord of the mouse
+     * @param y the Y cord of the mouse
+     */
     public void updateMousePosition( int x, int y ) {
         lblMousePosition.setText( "Current mouse x,y: " + x + ", " + y );
         lblMousePosition.repaint();
+    }
+
+    /**
+     * Updates loaded macros
+     * @param macs The string of macros, with each name separated by ','
+     */
+    public void updateLoadedMacros( String macs ){
+        if ( macs.isEmpty() ) {
+            modelLoadedMacros.removeAllElements();
+            return;
+        }
+        // Remove all macros to avoid duplicates
+        modelLoadedMacros.removeAllElements();
+        String[] allMacs = macs.split( "," );
+        for ( String m: allMacs )
+            modelLoadedMacros.addElement( m );
     }
 
     @Override
@@ -636,6 +794,13 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         if ( !pnlInfo.isEnabled() ) {
             pnlInfo.setEnabled( true );
             pnlMacro.setEnabled( true );
+
+            for ( Component c: pnlInfo.getComponents() ){
+                c.setEnabled( true );
+            }
+            for ( Component c: pnlMacro.getComponents() ){
+                c.setEnabled( true );
+            }
         }
 
         // Get a local copy of the details
@@ -667,7 +832,10 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         lblUserNameDisp.setText( dets.get( "UNAME" ) );
 
         // Set CPU usage label
-        String infoCPU = ( Double.valueOf( dets.get( "CPU-USED" ) ) * 100 ) + "% load over " + dets.get( "CPU-AMT" ) + " cores.";
+        String used = String.valueOf( Double.valueOf( dets.get( "CPU-USED" ) ) * 100 );
+        if ( used.length() > 7 )
+            used = used.substring( 0, used.indexOf( "." ) + 1 ) + "0...";
+        String infoCPU = used + "% load over " + dets.get( "CPU-AMT" ) + " cores.";
         lblCPUUsageDisp.setText( infoCPU );
 
         // Set Memory usage label

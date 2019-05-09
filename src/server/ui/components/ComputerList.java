@@ -7,6 +7,8 @@ import server.data.DataHandler;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.util.ArrayList;
 
 /**
@@ -41,7 +43,7 @@ public class ComputerList extends JPanel {
         pnlComp.setLayout( new BoxLayout( pnlComp, BoxLayout.X_AXIS ) );
         pnlComp.setBorder( new TitledBorder( "Registered Systems" ) );
 
-        pnlComp.add( new ComputerAdder() );
+        comps.add( new ComputerAdder() );
 
         add( pnlComp, BorderLayout.CENTER );
 
@@ -53,6 +55,10 @@ public class ComputerList extends JPanel {
                 updateDisplay( sb.getValue() );
                 lastRow = sb.getValue();
             }
+        } );
+
+        addMouseWheelListener( mouseWheelEvent -> {
+            sb.setValue( sb.getValue() + mouseWheelEvent.getUnitsToScroll() );
         } );
 
         lastRow = sb.getValue();
@@ -69,6 +75,7 @@ public class ComputerList extends JPanel {
         pnlComp.removeAll();
         pnlComp.revalidate();
 
+        // Whichever row is being displayed, display those three.
         for ( int x = ( row * screensPerRow ); x < ( row * screensPerRow ) + screensPerRow; x++ ) {
             if ( x < comps.size() ) {
                 if ( comps.get( x ) != null ) {
@@ -84,10 +91,11 @@ public class ComputerList extends JPanel {
             // representing the computer to get the name of the just added comp,
             // and then get the computer through that, and then set that computer as
             // selected.
-            DataHandler.getInstance().getComputer( comps.get( 0 ).getText() ).setDataComputer();
-        }
 
-        pnlComp.add( new ComputerAdder() );
+            // This is done this way since I'm not storing computers here.
+            if ( ! ( comps.get( 0 ) instanceof ComputerAdder ) )
+                DataHandler.getInstance().getComputer( comps.get( 0 ).getText() ).setDataComputer();
+        }
 
         currentRow = row;
         pnlComp.repaint();
@@ -104,8 +112,14 @@ public class ComputerList extends JPanel {
 
     public void addComputerToDisplay( Computer c ) {
         // Add it to our list of tracked computers
+        // Remove the last element, which is the comp adder
+        comps.remove( comps.size() - 1 );
+
+        // Add the new computer where it would have been
         comps.add( c );
 
+        // Then re-add the computer adder
+        comps.add( new ComputerAdder() );
         refreshUI();
         updateDisplay( currentRow );
     }

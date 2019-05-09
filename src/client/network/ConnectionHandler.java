@@ -66,8 +66,9 @@ public class ConnectionHandler extends Thread {
                         Out.printInfo( classId, mes.toString() );
                         if ( mes.getPrimaryCommand().contains( "DETAILS" ) ) {
                             // Client requests details, send them and a screenshot
-                            mes.setInfo( Details.getDetails() );
+                            mes.setInfo( new Details().getDetails() );
                             mes.setImg( ScreenImager.getScreenshot() );
+                            mes.setSecondayCommand( DataRepository.getInstance().getLoadedMacros() );
 
                             write( mes );
 
@@ -75,18 +76,22 @@ public class ConnectionHandler extends Thread {
                         }
                         else if ( mes.getPrimaryCommand().equalsIgnoreCase( "LOAD MACRO" ) ) {
                             // We want to load the macro that is coming through the pipeline
-                            Object read = in.readObject();
-                            if ( read instanceof Macro ) {
-                                DataRepository.getInstance().loadMacro( ( Macro ) read );
-                            }
-                            else
-                                Out.printError( classId, "Unexpected object sent through pipe." );
+                            DataRepository.getInstance().loadMacro( mes.getMacro() );
+                        }
+                        else if ( mes.getPrimaryCommand().equalsIgnoreCase( "REVOKE MACRO" ) ){
+                            // Unload macro based on string name
+                            DataRepository.getInstance().unloadMacro( mes.getSecondaryCommand() );
+                        }
+                        else if ( mes.getPrimaryCommand().equalsIgnoreCase( "GET MACROS" ) ){
+                            // Compile a list of what macros we have loaded here, and send it to InfoServer
+                            mes.setSecondayCommand( DataRepository.getInstance().getLoadedMacros() );
+                            write( mes );
                         }
                         else if ( mes.getPrimaryCommand().startsWith( "RUN MACRO" ) ) {
                             // Run whichever macro was specified after MACRO ( 1 -> x )
                             String nameOfMacroToRun = mes.getSecondaryCommand();
                             Out.printInfo( classId, "Running macro: " + nameOfMacroToRun );
-                            //DataRepository.getInstance().runMacro( nameOfMacroToRun );
+                            DataRepository.getInstance().runMacro( nameOfMacroToRun );
                         }
                         else if ( mes.getPrimaryCommand().equalsIgnoreCase( "RUN" ) ){
                             if ( !mes.getSecondaryCommand().equals( "" ) )

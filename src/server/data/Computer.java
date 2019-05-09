@@ -1,7 +1,6 @@
 package server.data;
 
 import res.Out;
-import server.data.macro.Macro;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -34,10 +33,6 @@ public class Computer extends JLabel {
 
     // Data variables for the computer
 
-    // comp[a-zA-Z] = Computer overall detail
-    // compOs[a-zA-Z] = Computer OS details
-    // compHard[a-zA-Z] = Computer Hardware details
-
     private String compName;
     private String compIp;
     private HashMap< String, String > details;
@@ -48,7 +43,6 @@ public class Computer extends JLabel {
         super();
 
         // Give some basic data first
-
         name = name.substring( 0,1 ).toUpperCase() + name.substring( 1 ).toLowerCase();
 
         this.compName = name;
@@ -77,7 +71,7 @@ public class Computer extends JLabel {
 
         // Set properties of this JLabel
         this.setIcon( scaled );
-        this.setText( name );
+        this.setText( compName );
         this.setBorder( unselectedBorder );
 
         // Set text alignment properties
@@ -96,13 +90,6 @@ public class Computer extends JLabel {
 
     public String getIP() {
         return this.compIp;
-    }
-
-    /**
-     * @param command The hot key action to run as macro
-     */
-    public void setHotkeyAction( Macro command ) {
-
     }
 
     public void setImage( RenderedImage i ){

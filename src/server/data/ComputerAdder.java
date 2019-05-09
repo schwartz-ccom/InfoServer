@@ -11,17 +11,25 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 
+/**
+ * Adds a quick way to add a computer, instead of going through menu items
+ */
 public class ComputerAdder extends JLabel {
 
     private Border defaultBorder = BorderFactory.createCompoundBorder(
             BorderFactory.createEmptyBorder(),
             BorderFactory.createEmptyBorder( 4, 4, 4, 4 ) );
 
-    // Formatting variables
-    private Dimension compIconSize = new Dimension( 256, 144 );
-
+    /**
+     * Constructor creates a JLabel that is similar to a Computer JLabel,
+     * but has a plus on it and can't be selected
+     */
     public ComputerAdder(){
+        // Call the super JLabel class for setup.
         super();
+
+        // Define the icon size
+        Dimension compIconSize = new Dimension( 256, 144 );
 
         // Get the imageIcon for the computer
         Image defIcon = null;
@@ -54,7 +62,9 @@ public class ComputerAdder extends JLabel {
         this.addMouseListener( new MouseAdapter() {
             @Override
             public void mousePressed( MouseEvent e ) {
-                App.getInstance().showAddComputerPane();
+                // If left click
+                if ( e.getButton() == 1 )
+                    App.getInstance().showAddComputerPane();
             }
         } );
     }

@@ -1,5 +1,6 @@
 package server.data.macro;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,7 +9,9 @@ import java.util.List;
  * Commands are limited, but that's intentional for now, since I don't see
  * much use in expanding those.
  */
-public class Macro {
+public class Macro implements Serializable {
+
+    private static final long serialVersionUID = 12L;
 
     // Private things needed all over the class.
     private List< String > events;
