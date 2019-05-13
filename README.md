@@ -1,5 +1,6 @@
 # InfoServer
-A way of managing computers on the tier 1 side
+A way of managing computers on the tier 1 side, as well as reducing the amount of
+steps I have to take during the day.
 
 ## What does it do?
 A lot, but mainly:

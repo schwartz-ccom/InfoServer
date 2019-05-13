@@ -31,7 +31,6 @@ public class DataRepository {
 
     public void loadMacro( Macro toLoad ) {
         loadedMacros.put( toLoad.getMacroName(), toLoad );
-        Out.printInfo( getClass().getSimpleName(), "I have a new macro: " + toLoad.getMacroName() );
     }
     public void runMacro( String nameToRun ) {
         loadedMacros.get( nameToRun ).runMacro();

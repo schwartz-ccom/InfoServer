@@ -3,6 +3,7 @@ package server.ui;
 import res.Out;
 import server.data.Computer;
 import server.data.DataHandler;
+import server.data.EmailHandler;
 import server.data.MousePositionHandler;
 import server.data.macro.MacroHandler;
 import server.network.NetworkHandler;
@@ -151,7 +152,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         pnlInfo = makeInfoPanel();
         pnlInfo.setEnabled( false );
 
-        for ( Component c: pnlInfo.getComponents() ){
+        for ( Component c : pnlInfo.getComponents() ) {
             c.setEnabled( false );
         }
 
@@ -159,7 +160,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
 
         pnlMacro = makeMacroSelectPanel();
         pnlMacro.setEnabled( false );
-        for ( Component c: pnlMacro.getComponents() ){
+        for ( Component c : pnlMacro.getComponents() ) {
             c.setEnabled( false );
         }
 
@@ -185,7 +186,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         frm.revalidate();
     }
 
-    private JPanel makeInfoPanel(){
+    private JPanel makeInfoPanel() {
         GridBagConstraints cs = new GridBagConstraints();
         cs.insets = new Insets( 4, 4, 4, 4 );
         JPanel pnlInfo = new JPanel( new GridBagLayout() );
@@ -230,7 +231,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
 
         // Initialize the elements that display the info. If no info is known, "UNKNOWN" will be displayed
 
-        lblCompNameDisp = new JLabel( "No Computer Selected");
+        lblCompNameDisp = new JLabel( "No Computer Selected" );
         cs.gridx = 1;
         cs.gridy = 0;
         pnlInfo.add( lblCompNameDisp, cs );
@@ -332,7 +333,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         return pnlInfo;
     }
 
-    private JPanel makeMacroSelectPanel(){
+    private JPanel makeMacroSelectPanel() {
 
         JPanel pnlMacro = new JPanel( new GridBagLayout() );
         pnlMacro.setBorder( BorderFactory.createTitledBorder( "Macro Select" ) );
@@ -350,7 +351,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
 
         JLabel lblClientList = new JLabel( "Client's loaded Macros: " );
         cs.gridx = 1;
-        pnlMacro.add( lblClientList, cs);
+        pnlMacro.add( lblClientList, cs );
 
         cs.gridx = 0;
         cs.gridy = 1;
@@ -371,7 +372,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
             @Override
             public void mousePressed( MouseEvent e ) {
                 // If double click, run macro
-                if ( e.getButton() == MouseEvent.BUTTON3 ){
+                if ( e.getButton() == MouseEvent.BUTTON3 ) {
                     // Create the message
                     Message m = new Message( "RUN MACRO" );
 
@@ -474,7 +475,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         }
     }
 
-    private void showSuggestionPane(){
+    private void showSuggestionPane() {
 
         Object[] btnLabels = { "Submit", "Cancel" };
 
@@ -510,14 +511,32 @@ public class App implements MacroSubscriber, ComputerSubscriber {
                 btnLabels,
                 btnLabels[ 0 ]
         );
-        if ( status == 0 ){
+        if ( status == 0 ) {
             int what = 0;
             if ( rbQoL.isSelected() )
                 what = 1;
             else if ( rbBug.isSelected() )
                 what = 2;
+
             String response = txtNotes.getText();
-            Out.printInfo( getClass().getSimpleName(), "User requested: " + what + ": " + response );
+            String title;
+
+            switch ( what ) {
+                case 0:
+                    title = "Feature Request";
+                    break;
+                case 1:
+                    title = "Quality of Life Request";
+                    break;
+                case 2:
+                    title = "Bug Fix Request";
+                    break;
+                default:
+                    title = "Unknown Request";
+                    break;
+            }
+
+            EmailHandler.getInstance().sendEmail( title + " from " + System.getProperty( "user.name" ), response );
             JOptionPane.showMessageDialog( frm, "Thank you!\n\nChris has received your response and is looking into it" );
         }
     }
@@ -594,10 +613,10 @@ public class App implements MacroSubscriber, ComputerSubscriber {
                         Point toInsert = MousePositionHandler.getMouseLoc();
                         txtMacroEditor.insert( "MOUSE MOVE " + toInsert.x + " " + toInsert.y + "\n", cLoc );
                     }
-                    else if ( e.getKeyCode() == KeyEvent.VK_S ){
+                    else if ( e.getKeyCode() == KeyEvent.VK_S ) {
                         txtMacroEditor.insert( "MOUSE PRESS 1\n", cLoc );
                     }
-                    else if ( e.getKeyCode() == KeyEvent.VK_D ){
+                    else if ( e.getKeyCode() == KeyEvent.VK_D ) {
                         txtMacroEditor.insert( "DELAY 50\n", cLoc );
                     }
                 }
@@ -763,6 +782,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
     /**
      * Updates the mouse locator on the CreateMacroPane
      * Called by MousePositionHandler
+     *
      * @param x the X cord of the mouse
      * @param y the Y cord of the mouse
      */
@@ -773,9 +793,10 @@ public class App implements MacroSubscriber, ComputerSubscriber {
 
     /**
      * Updates loaded macros
+     *
      * @param macs The string of macros, with each name separated by ','
      */
-    public void updateLoadedMacros( String macs ){
+    public void updateLoadedMacros( String macs ) {
         if ( macs.isEmpty() ) {
             modelLoadedMacros.removeAllElements();
             return;
@@ -783,7 +804,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         // Remove all macros to avoid duplicates
         modelLoadedMacros.removeAllElements();
         String[] allMacs = macs.split( "," );
-        for ( String m: allMacs )
+        for ( String m : allMacs )
             modelLoadedMacros.addElement( m );
     }
 
@@ -795,10 +816,10 @@ public class App implements MacroSubscriber, ComputerSubscriber {
             pnlInfo.setEnabled( true );
             pnlMacro.setEnabled( true );
 
-            for ( Component c: pnlInfo.getComponents() ){
+            for ( Component c : pnlInfo.getComponents() ) {
                 c.setEnabled( true );
             }
-            for ( Component c: pnlMacro.getComponents() ){
+            for ( Component c : pnlMacro.getComponents() ) {
                 c.setEnabled( true );
             }
         }
@@ -840,7 +861,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
 
         // Set Memory usage label
         // But first, format that!
-        double freeMem = Double.valueOf( dets.get( "MEM-FREE") );
+        double freeMem = Double.valueOf( dets.get( "MEM-FREE" ) );
         double totMem = Double.valueOf( dets.get( "MEM-TOTAL" ) );
 
         String dispFreeMem = formatDouble( freeMem );
@@ -861,6 +882,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
     /**
      * Formats an input double as a string with two decimal places
      * Called by updateComputer() for displaying RAM / Disk Space
+     *
      * @param val The double to format
      * @return A string representation of the double in the format ####.##
      */
@@ -870,11 +892,11 @@ public class App implements MacroSubscriber, ComputerSubscriber {
             val = val / 1000;
             ext = "KB";
         }
-        else if ( val >= 1000000 && val < 1000000000 ){
+        else if ( val >= 1000000 && val < 1000000000 ) {
             val = val / 1000000;
             ext = "MB";
         }
-        else if ( val >= 1000000000 ){
+        else if ( val >= 1000000000 ) {
             val = val / 1000000000;
             ext = "GB";
         }
