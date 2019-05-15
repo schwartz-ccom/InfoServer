@@ -704,7 +704,6 @@ public class App implements MacroSubscriber, ComputerSubscriber {
 
     /**
      * Called when a new Macro is added
-     *
      * @param macros The list of Macros
      */
     @Override
@@ -776,12 +775,13 @@ public class App implements MacroSubscriber, ComputerSubscriber {
      * @param macs The string of macros, with each name separated by ','
      */
     public void updateLoadedMacros( String macs ){
+        // Remove everything from LoadedMacros model, since this needs to be
+        // done regardless of what scenario we have
+        modelLoadedMacros.removeAllElements();
         if ( macs.isEmpty() ) {
-            modelLoadedMacros.removeAllElements();
             return;
         }
         // Remove all macros to avoid duplicates
-        modelLoadedMacros.removeAllElements();
         String[] allMacs = macs.split( "," );
         for ( String m: allMacs )
             modelLoadedMacros.addElement( m );
@@ -850,10 +850,14 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         lblMemUsageDisp.setText( infoMem );
 
         // Set Disk usage label
-        String infoDisk = dets.get( "DISK-FREE" ) + " out of " + dets.get( "DISK-TOTAL" ) + " free";
+        // Also format it, similar to Mem usage
+        double freeDisk = Double.valueOf( dets.get( "DISK-FREE") );
+        double totDisk = Double.valueOf( dets.get( "DISK-TOTAL" ) );
+        
+        String dispFreeDisk = formatDouble( freeDisk );
+        String dispTotaDisk = formatDouble( totDisk );
+        String infoDisk = dispFreeDisk + " out of " + dispTotaDisk + " free";
         lblDiskUsageDisp.setText( infoDisk );
-
-        Out.printInfo( getClass().getSimpleName(), "Updated client information" );
 
         frm.repaint();
     }
