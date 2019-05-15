@@ -32,9 +32,8 @@ public class EmailHandler {
         props = new Properties();
         props.put( "mail.smtp.host", "mail.ccom.unh.edu" );
         props.put( "mail.smtp.localhost", "mail.ccom.unh.edu" );
-        props.put( "mail.debug", "true" );
+        props.put( "mail.debug", "false" );
         props.put( "mail.smtp.auth", "false" );
-        Out.printInfo( "EmailHandler", "Done setting up props" );
     }
 
     /**
@@ -45,22 +44,25 @@ public class EmailHandler {
     public void sendEmail( String title, String body ) {
         String classId = "EmailHandler";
 
-        Out.printInfo( classId, "Sending email to Chris..." );
-
+        // Get a session from the set properties
         Session session = Session.getDefaultInstance( props );
 
+        // Create the message object
         MimeMessage message = new MimeMessage( session );
         try {
+            // Set up the email with the from, to, subject, date, body, etc.
             message.setFrom( new InternetAddress( "no-reply@infoserver.com", "InfoServer Requester Service" ) );
             message.setRecipient( MimeMessage.RecipientType.TO, new InternetAddress( "cschwartz@ccom.unh.edu" ) );
             message.setSubject( title );
             message.setText( body, "utf-8" );
             message.setSentDate( new Date() );
+
+            // Then send it
             Transport.send( message );
         } catch ( MessagingException me ) {
             Out.printError( classId, "Error sending message: " + me.getMessage() );
-        } catch ( UnsupportedEncodingException e ) {
-            e.printStackTrace();
+        } catch ( UnsupportedEncodingException uee ) {
+            Out.printError( classId, "Unsupported Encoding: " + uee.getMessage() );
         }
     }
 }

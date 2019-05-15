@@ -536,11 +536,18 @@ public class App implements MacroSubscriber, ComputerSubscriber {
                     break;
             }
 
-            EmailHandler.getInstance().sendEmail( title + " from " + System.getProperty( "user.name" ), response );
+            // Finalize the title with info from System.
+            String titleFinalized = title + " from " + System.getProperty( "user.name" );
+
+            EmailHandler.getInstance().sendEmail( titleFinalized, response );
             JOptionPane.showMessageDialog( frm, "Thank you!\n\nChris has received your response and is looking into it" );
         }
     }
 
+    /**
+     * Shows settings tha the user can adjust.
+     * Currently it's just what port to connect to on the client
+     */
     private void showSettingsPane() {
 
         // Button labels
