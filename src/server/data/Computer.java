@@ -10,7 +10,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.RenderedImage;
 import java.io.IOException;
-import java.util.HashMap;
 
 /**
  * On the UI, this is the component that shows the desktop of the computer
@@ -35,7 +34,7 @@ public class Computer extends JLabel {
     
     private String compName;
     private String compIp;
-    private HashMap< String, String > details;
+    private String[] details;
     
     // Construct the JLabel for the Computer
     public Computer( String name, String IP ) {
@@ -48,9 +47,9 @@ public class Computer extends JLabel {
         this.compName = name;
         this.compIp = IP;
         
-        this.details = new HashMap<>();
-        details.put( "CNAME", this.compName );
-        details.put( "CONNECTED?", "NO" );
+        this.details = new String[ 13 ];
+        details[ 0 ] = "NO";
+        details[ 2 ] = this.compName;
         
         // Get the imageIcon for the computer
         Image defIcon = null;
@@ -59,12 +58,15 @@ public class Computer extends JLabel {
         } catch ( IOException e ) {
             Out.printError( getClass().getSimpleName(), "Error getting resource: " + e.getMessage() );
         }
-        Icon scaled = new ImageIcon(
-                defIcon.getScaledInstance(
-                        compIconSize.width,
-                        compIconSize.height,
-                        Image.SCALE_SMOOTH )
-        );
+        Icon scaled = null;
+        if ( defIcon != null ) {
+            scaled = new ImageIcon(
+                    defIcon.getScaledInstance(
+                            compIconSize.width,
+                            compIconSize.height,
+                            Image.SCALE_SMOOTH )
+            );
+        }
         
         // Give it a size
         this.setMinimumSize( compIconSize );
@@ -91,22 +93,18 @@ public class Computer extends JLabel {
     public String getIP() {
         return this.compIp;
     }
-    
-    public void setImage( RenderedImage i ) {
-        Image toScale = ( Image ) i;
-        Image scaled = toScale.getScaledInstance( compIconSize.width, compIconSize.height, Image.SCALE_SMOOTH );
-        setIcon( new ImageIcon( scaled ) );
+
+    public void setImage( Icon i ){
+        setIcon( i );
     }
-    
-    public void setDetails( HashMap< String, String > s ) {
-        compName = s.get( "CNAME" );
-        this.details = null;
+    public void setDetails( String[] s ) {
         this.details = s;
+        this.compName = details[ 2 ];
         
         this.setText( compName );
     }
     
-    public HashMap< String, String > getDetails() {
+    public String[] getDetails() {
         return this.details;
     }
     

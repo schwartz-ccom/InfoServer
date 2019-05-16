@@ -132,7 +132,7 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
             else if ( mes.getPrimaryCommand().equalsIgnoreCase( "DETAILS" ) ) {
                 // Write the request
                 write( mes );
-                
+
                 // Get the next object coming through the stream via helper method.
                 Message read = getNextInStream();
                 

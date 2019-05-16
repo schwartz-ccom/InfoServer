@@ -1,6 +1,6 @@
 package client.network;
 
-import client.data.DataRepository;
+import client.data.MacroRepository;
 import client.data.Details;
 import client.data.ScreenImager;
 import res.Out;
@@ -22,6 +22,8 @@ public class ConnectionHandler extends Thread {
     
     private boolean transactionCompleted = false;
     private String classId = this.getClass().getSimpleName();
+
+
     
     public ConnectionHandler( int port ) {
         // One connection at a time!
@@ -34,11 +36,15 @@ public class ConnectionHandler extends Thread {
             Out.printError( classId, "Could not start server socket: " + ioe.getMessage() );
             acceptingConnections = false;
         }
-        
+
+        // Declare a details class to use instead of creating a new
+        // one every request
+        Details details = new Details();
+        ScreenImager si = new ScreenImager();
+
         // While this client is accepting clients, accept clients.
         // I may implement a way for this to shut itself off if it detects abnormal
         // cpu usage.
-        
         while ( acceptingConnections ) {
             try {
                 Out.printInfo( classId, "Listening on " + InetAddress.getLocalHost() + ":" + 25566 );
@@ -49,7 +55,7 @@ public class ConnectionHandler extends Thread {
                 
                 in = new ObjectInputStream( client.getInputStream() );
                 Out.printInfo( classId, "InfoServer has connected and streams created" );
-                
+                transactionCompleted = false;
             } catch ( IOException ie ) {
                 Out.printError( classId, "Error accepting remote connection: " + ie.getMessage() );
             }
@@ -79,9 +85,9 @@ public class ConnectionHandler extends Thread {
                     Out.printInfo( classId, mes.toString() );
                     if ( mes.getPrimaryCommand().contains( "DETAILS" ) ) {
                         // Client requests details, send them and a screenshot
-                        mes.setInfo( new Details().getDetails() );
-                        mes.setImg( ScreenImager.getScreenshot() );
-                        mes.setSecondayCommand( DataRepository.getInstance().getLoadedMacros() );
+                        mes.setInfo( details.getDetails() );
+                        mes.setImg( si.getScreenshot() );
+                        mes.setSecondayCommand( MacroRepository.getInstance().getLoadedMacros() );
             
                         write( mes );
             
@@ -89,22 +95,22 @@ public class ConnectionHandler extends Thread {
                     }
                     else if ( mes.getPrimaryCommand().equalsIgnoreCase( "LOAD MACRO" ) ) {
                         // We want to load the macro that is coming through the pipeline
-                        DataRepository.getInstance().loadMacro( mes.getMacro() );
+                        MacroRepository.getInstance().loadMacro( mes.getMacro() );
                     }
                     else if ( mes.getPrimaryCommand().equalsIgnoreCase( "REVOKE MACRO" ) ) {
                         // Unload macro based on string name
-                        DataRepository.getInstance().unloadMacro( mes.getSecondaryCommand() );
+                        MacroRepository.getInstance().unloadMacro( mes.getSecondaryCommand() );
                     }
                     else if ( mes.getPrimaryCommand().equalsIgnoreCase( "GET MACROS" ) ) {
                         // Compile a list of what macros we have loaded here, and send it to InfoServer
-                        mes.setSecondayCommand( DataRepository.getInstance().getLoadedMacros() );
+                        mes.setSecondayCommand( MacroRepository.getInstance().getLoadedMacros() );
                         write( mes );
                     }
                     else if ( mes.getPrimaryCommand().startsWith( "RUN MACRO" ) ) {
                         // Run whichever macro was specified after MACRO ( 1 -> x )
                         String nameOfMacroToRun = mes.getSecondaryCommand();
                         Out.printInfo( classId, "Running macro: " + nameOfMacroToRun );
-                        DataRepository.getInstance().runMacro( nameOfMacroToRun );
+                        MacroRepository.getInstance().runMacro( nameOfMacroToRun );
                     }
                     else if ( mes.getPrimaryCommand().equalsIgnoreCase( "RUN" ) ) {
                         if ( !mes.getSecondaryCommand().equals( "" ) ) {

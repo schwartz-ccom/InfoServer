@@ -18,7 +18,7 @@ doing from right at your desk?
 As long as you have Java 10+ installed, absolutely.
 
 ## What version are we at?
-Release 1 Beta 1
+Release 1 Beta 2
 
 ## What's your roadmap looking like?
 Well, I usually add that to commits, but so far:
@@ -31,26 +31,39 @@ Nothin' yet :(
 
 -------------------------------------------------------------
 
-Planned for **RELEASE 1** ( By **5/10** ):
+Planned for **RELEASE 1** ( By **6/1** ):
 
 - [ ] Increased memory efficiency
 
 - [ ] Increased usability and more customizable options
 
-- [ ] Increased Feedback hub usability
+      Usability keypoints:
+      - Cache manager
+      - Save / Reload state
+      - Quick commands
+
+- [x] Increased Feedback hub usability
 
 - [ ] Client as a service
 
+- [ ] Full screen macro editor and advanced features
+     
+      Macro features planned:
+      - Dragging
+      - Relative window positioning
+      - 
+      
+
 -------------------------------------------------------------
 
-Planned for **RELEASE 2** ( By **6/1** ):
-
-- [ ] Full Screen Macro Editor
+Planned for **RELEASE 2** ( By **7/1** ):
 
 - [ ] Dark Mode
 
 - [ ] Remote activation of services
 
+- [ ] Self updater
+
 
 There are ways to suggest edits through the app itself, and it's *SUPER*
-recommended to do it that way
+recommended to do it that way.

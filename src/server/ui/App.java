@@ -90,7 +90,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
     }
 
     private void createGUI() {
-        frm = new JFrame( "Info Server - Release 1 - VANILLA" );
+        frm = new JFrame( "Info Server - Release 1 Beta 2 - VANILLA" );
         frm.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
         frm.setLayout( new BorderLayout( 4, 4 ) );
         frm.setSize( new Dimension( 850, 620 ) );
@@ -720,7 +720,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         macroInfoFrame.setLocation( frm.getX() + frm.getWidth() + 30, frm.getY() );
 
         JTextArea e = new JTextArea( help );
-        e.setPreferredSize( new Dimension( 400, 350 ) );
+        e.setPreferredSize( new Dimension( 440, 350 ) );
 
         macroInfoFrame.add( e );
         macroInfoFrame.setDefaultCloseOperation( JFrame.DISPOSE_ON_CLOSE );
@@ -818,6 +818,25 @@ public class App implements MacroSubscriber, ComputerSubscriber {
     @Override
     public void updateComputer( Computer data ) {
 
+        // For anyone editing this method, which is completely fine,
+        // you might be confused about the numbering through the array
+        // You can get a better idea of what goes where in client/Details.java, where
+        // it is loaded, or refer to:
+
+        // 0  - Is accessible
+        // 1  - What time we accessed the details at
+        // 2  - Computer Name
+        // 3  - OS Arch
+        // 4  - OS Name
+        // 5  - OS Version
+        // 6  - User name of currently logged in user
+        // 7  - Number of processor cores ( including HT / SMT cores )
+        // 8  - System CPU Load
+        // 9  - Available system memory unformatted
+        // 10 - Total system memory unformatted
+        // 11 - Main drive available space unformatted
+        // 12 - Main drive total space unformatted
+
         // Enable the info panel if it wasn't already
         if ( !pnlInfo.isEnabled() ) {
             pnlInfo.setEnabled( true );
@@ -832,13 +851,13 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         }
 
         // Get a local copy of the details
-        HashMap< String, String > dets = data.getDetails();
+        String[] dets = data.getDetails();
 
         // Set the computer name info label
         lblCompNameDisp.setText( data.getComputerName() );
 
         // If we haven't connected yet, stop.
-        if ( dets.get( "CONNECTED?" ).equalsIgnoreCase( "NO" ) ) {
+        if ( dets[ 0 ].equalsIgnoreCase( "NO" ) ) {
             lblOSInfoDisp.setText( "Unknown" );
             lblCPUUsageDisp.setText( "Unknown" );
             lblUserNameDisp.setText( "Unknown" );
@@ -850,26 +869,26 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         lblHasClientInstalled.setText( "Yup" );
 
         // Set last access time
-        lblLastUpdateDisp.setText( dets.get( "TIME" ) );
+        lblLastUpdateDisp.setText( dets[ 1 ] );
 
         // Set OS label
-        String infoOS = dets.get( "CONAM" ) + " " + dets.get( "CARCH" ) + dets.get( "CVERS" );
+        String infoOS = dets[ 4 ] + ", " + dets[ 3 ] + " v." + dets[ 5 ];
         lblOSInfoDisp.setText( infoOS );
 
         // Set user label
-        lblUserNameDisp.setText( dets.get( "UNAME" ) );
+        lblUserNameDisp.setText( dets[ 6 ] );
 
         // Set CPU usage label
-        String used = String.valueOf( Double.valueOf( dets.get( "CPU-USED" ) ) * 100 );
+        String used = String.valueOf( Double.valueOf( dets[ 8 ] ) * 100 );
         if ( used.length() > 7 )
-            used = used.substring( 0, used.indexOf( "." ) + 1 ) + "0...";
-        String infoCPU = used + "% load over " + dets.get( "CPU-AMT" ) + " cores.";
+            used = used.substring( 0, used.indexOf( "." ) + 1 ) + "00";
+        String infoCPU = used + "% load over " + dets[ 7 ] + " cores.";
         lblCPUUsageDisp.setText( infoCPU );
 
         // Set Memory usage label
         // But first, format that!
-        double freeMem = Double.valueOf( dets.get( "MEM-FREE" ) );
-        double totMem = Double.valueOf( dets.get( "MEM-TOTAL" ) );
+        double freeMem = Double.valueOf( dets[ 9 ] );
+        double totMem = Double.valueOf( dets[ 10 ] );
 
         String dispFreeMem = formatDouble( freeMem );
         String dispTotaMem = formatDouble( totMem );
@@ -879,8 +898,8 @@ public class App implements MacroSubscriber, ComputerSubscriber {
 
         // Set Disk usage label
         // Also format it, similar to Mem usage
-        double freeDisk = Double.valueOf( dets.get( "DISK-FREE") );
-        double totDisk = Double.valueOf( dets.get( "DISK-TOTAL" ) );
+        double freeDisk = Double.valueOf( dets[ 12 ] );
+        double totDisk = Double.valueOf( dets[ 11 ] );
 
         String dispFreeDisk = formatDouble( freeDisk );
         String dispTotaDisk = formatDouble( totDisk );
