@@ -33,7 +33,9 @@ Nothin' yet :(
 
 Planned for **RELEASE 1** ( By **6/1** ):
 
-- [ ] Increased memory efficiency
+- [x] Increased memory efficiency
+
+- [ ] Squash memory leaks completely
 
 - [ ] Increased usability and more customizable options
 
