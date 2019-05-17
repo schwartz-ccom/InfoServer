@@ -14,6 +14,7 @@ import server.resources.MacroSubscriber;
 import server.ui.components.ComputerList;
 import server.ui.components.ConnectButton;
 import server.ui.components.StatusBar;
+import server.ui.components.macrocomps.MacroEditorPane;
 
 import javax.swing.*;
 import java.awt.*;
@@ -282,6 +283,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         pnlInfo.add( btnConnect, cs );
 
         JButton btnMacro = new JButton( "Macros" );
+        btnMacro.addActionListener( actionEvent -> new MacroEditorPane() );
         btnMacro.setPreferredSize( dimBtnPreferred );
         cs.gridx = 1;
         pnlInfo.add( btnMacro, cs );

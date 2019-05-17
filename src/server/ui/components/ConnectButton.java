@@ -13,7 +13,6 @@ public class ConnectButton extends JButton implements NetworkStatusSubscriber {
     // 1 = Connecting
     // 2 = Successfully connected
     private int status = 0;
-
     public ConnectButton( String title ) {
         super( title );
         NetworkHandler.getInstance().subscribeToStats( this );

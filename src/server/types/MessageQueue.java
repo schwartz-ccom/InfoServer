@@ -1,6 +1,5 @@
 package server.types;
 
-import res.Out;
 import server.network.info.Message;
 
 import java.util.Arrays;
