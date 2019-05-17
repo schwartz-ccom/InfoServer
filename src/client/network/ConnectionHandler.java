@@ -14,6 +14,9 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+/**
+ * Handles client connection as a sperate thread.
+ */
 public class ConnectionHandler extends Thread {
     
     private ObjectOutputStream out;
@@ -23,15 +26,16 @@ public class ConnectionHandler extends Thread {
     private boolean transactionCompleted = false;
     private String classId = this.getClass().getSimpleName();
 
-
-    
+    /**
+     * Handles the connection between this and the InfoServer
+     * @param port the port to listen on. Specified by -p < port >
+     */
     public ConnectionHandler( int port ) {
         // One connection at a time!
         ServerSocket ss = null;
         boolean acceptingConnections = true;
         try {
             ss = new ServerSocket( port, 50 );
-            Out.printInfo( classId, "Started Server Socket on port " + ss.getLocalPort() );
         } catch ( IOException ioe ) {
             Out.printError( classId, "Could not start server socket: " + ioe.getMessage() );
             acceptingConnections = false;
@@ -62,9 +66,10 @@ public class ConnectionHandler extends Thread {
             
             // While the transaction between the server and client is not done,
             // continue to receive messages
-            
+
+            Out.printInfo( classId, "Ready to begin processing commands." );
+
             while ( !transactionCompleted ) {
-                Out.printInfo( classId, "Waiting for request..." );
                 Object ob = null;
                 try {
                     ob = in.readObject();
@@ -82,7 +87,6 @@ public class ConnectionHandler extends Thread {
                 }
                 if ( ob instanceof Message ) {
                     Message mes = ( Message ) ob;
-                    Out.printInfo( classId, mes.toString() );
                     if ( mes.getPrimaryCommand().contains( "DETAILS" ) ) {
                         // Client requests details, send them and a screenshot
                         mes.setInfo( details.getDetails() );
@@ -91,7 +95,6 @@ public class ConnectionHandler extends Thread {
             
                         write( mes );
             
-                        Out.printInfo( classId, "Successfully sent InfoServer details" );
                     }
                     else if ( mes.getPrimaryCommand().equalsIgnoreCase( "LOAD MACRO" ) ) {
                         // We want to load the macro that is coming through the pipeline
@@ -124,11 +127,11 @@ public class ConnectionHandler extends Thread {
                     else if ( mes.getPrimaryCommand().contains( "GOODBYE" ) ) {
                         // Client is disconnecting ( Server is switching computers )
                         transactionCompleted = true;
-                        Out.printInfo( classId, "The conversation has ended and I am lonely." );
+                        Out.printInfo( classId, "Goodnight." );
                     }
                 }
             }
-            Out.printInfo( classId, "Transaction completed." );
+            Out.printInfo( classId, "No longer processing commands for connection." );
             disconnectFromCurrent();
         }
     }
@@ -161,7 +164,7 @@ public class ConnectionHandler extends Thread {
         } catch ( IOException e ) {
             Out.printError( classId, "Couldn't close server socket. Already closed?" );
         }
-        Out.printInfo( classId, "All streams closed." );
+        Out.printInfo( classId, "All streams closed succesfully." );
         transactionCompleted = true;
     }
 }

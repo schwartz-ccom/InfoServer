@@ -1,6 +1,6 @@
 package server.ui.components;
 
-import server.data.Computer;
+import server.types.Computer;
 import server.data.DataHandler;
 import server.network.NetworkHandler;
 import server.network.info.Message;

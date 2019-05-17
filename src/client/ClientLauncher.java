@@ -15,8 +15,6 @@ public class ClientLauncher {
     }
     
     public static void main( String [] args ){
-        Out.printInfo( "MAIN", "ARGS COUNT: " + args.length );
-        
         // If the user has specified a port to run this on
         if ( args.length == 2 )
            new ClientLauncher( Integer.valueOf( args[ 1 ] ) );

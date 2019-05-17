@@ -3,6 +3,7 @@ package server.data;
 import server.network.NetworkHandler;
 import server.network.info.Message;
 import server.resources.ComputerSubscriber;
+import server.types.Computer;
 import server.ui.components.ComputerList;
 
 import java.util.ArrayList;
@@ -31,7 +32,7 @@ public class DataHandler {
         allComputers = new ArrayList<>();
     }
 
-    void setCurrentComputer( Computer c ){
+    public void setCurrentComputer( Computer c ){
         // Unselect the current computer, and then select the new computer
         if ( currentComputer != null ) {
             currentComputer.unselect();

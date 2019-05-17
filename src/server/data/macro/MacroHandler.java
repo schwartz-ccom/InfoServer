@@ -33,11 +33,9 @@ public class MacroHandler {
         macros = new ArrayList<>();
     }
     public Macro getMacro( String name ){
-        for ( Macro m: macros ){
-            if( m.getMacroName().equals( name ) ) {
-                Out.printInfo(getClass().getSimpleName(), "Found macro: " + m.getMacroName() );
+        for ( Macro m: macros ) {
+            if ( m.getMacroName().equals( name ) )
                 return m;
-            }
         }
         return null;
     }
@@ -153,15 +151,6 @@ public class MacroHandler {
      */
     public void subscribe( MacroSubscriber sub ) {
         subscribers.add( sub );
-    }
-
-    /**
-     * The way for Objects to remove themselves from the list
-     * @param sub The Object un-subscribing
-     * @return A boolean confirmation
-     */
-    public boolean unsubscribe( MacroSubscriber sub ) {
-        return subscribers.remove( sub );
     }
 
     /**

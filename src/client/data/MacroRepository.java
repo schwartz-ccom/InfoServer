@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Handles storage of Macros / Computer data
+ * Handles storage of Macros data
  */
 public class MacroRepository {
 

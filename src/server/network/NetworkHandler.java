@@ -1,11 +1,10 @@
 package server.network;
 
 import res.Out;
-import server.data.Computer;
 import server.data.DataHandler;
 import server.network.info.Message;
-import server.resources.ComputerSubscriber;
 import server.resources.NetworkStatusSubscriber;
+import server.types.MessageQueue;
 import server.ui.App;
 
 import javax.swing.*;
@@ -21,7 +20,7 @@ import java.util.*;
  * The top level networking part.
  * I'm only doing a single seat server, so this'll be easier than say a chat client.
  */
-public class NetworkHandler extends Thread implements ComputerSubscriber {
+public class NetworkHandler extends Thread {
     
     private int port = 25566;
     
@@ -33,11 +32,11 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
     private ObjectInputStream in;
     private ObjectOutputStream out;
     
-    final private Queue< Message > messageList = new LinkedList<>();
+    final private MessageQueue messageList = new MessageQueue();
     
     private boolean amAlive = false;
     
-    private String classId = "NetworkHandler";
+    private String classId = this.getClass().getSimpleName();
     private static NetworkHandler instance;
     
     public static NetworkHandler getInstance() {
@@ -67,14 +66,13 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
      * ask it anything else afterwards
      */
     public void run() {
-        
+
+        // Decalre the boolean so we can access it throughout the loop.
+        // Long in short, it's the while loop that checks the messages going and
+        // coming from the client
         boolean keepConnectionAlive = true;
-        
-        if ( ipToConnect.equalsIgnoreCase( "" ) ) {
-            JOptionPane.showMessageDialog( null, "There is no target" );
-            return;
-        }
-        
+
+        // Get the computer name so we can tell the StatusBar what's up
         String compName = DataHandler.getInstance().getCurrentComputer().getComputerName();
         
         try {
@@ -102,15 +100,14 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
         amAlive = true;
         
         // Queue up the first Details message.
-        messageList.add( new Message( "DETAILS" ) );
+        messageList.addMessage( new Message( "DETAILS" ) );
         
         // Wait on the user to send any commands they want
         while ( keepConnectionAlive ) {
             synchronized ( messageList ) {
                 // If the messageList is empty, wait on the list to be filled
                 // Doing this reduces CPU cycles, as opposed to a while loop.
-                if ( messageList.isEmpty() ) {
-                    Out.printInfo( classId, "Waiting for next message..." );
+                if ( messageList.getSize() == 0 ) {
                     try {
                         messageList.wait();
                     } catch( InterruptedException ie ){
@@ -120,7 +117,7 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
             }
             
             // Get the next command / message / whatever you want to call it
-            Message mes = messageList.remove();
+            Message mes = messageList.pop();
             
             // Then go through each special case and do what is necessary, or just send it
             if ( mes.getPrimaryCommand().equalsIgnoreCase( "GOODBYE" ) ) {
@@ -145,10 +142,6 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
                 }
             }
             else if ( mes.getPrimaryCommand().equalsIgnoreCase( "GET MACROS" ) ) {
-                // Write the message, and since we expect input, capture the next input
-                if ( mes.getSecondaryCommand().isEmpty() )
-                    break;
-                
                 // Write out the message, since we need to handle input later.
                 write( mes );
                 
@@ -162,9 +155,7 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
             else
                 write( mes );
         }
-    
         disconnect();
-        
     }
     
     /**
@@ -231,7 +222,7 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
     public void sendCommand( Message mes ) {
         // Get the lock for message list and notify anything waiting on it
         synchronized ( messageList ) {
-            messageList.add( mes );
+            messageList.addMessage( mes );
             messageList.notify();
         }
     }
@@ -246,7 +237,7 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
     }
     
     /**
-     * Allow NetworkSubscribers to get ono the list
+     * Allow NetworkSubscribers to get onto the list
      *
      * @param sub The object wanting updates
      */
@@ -258,11 +249,5 @@ public class NetworkHandler extends Thread implements ComputerSubscriber {
         for ( NetworkStatusSubscriber nSub : statSubs ) {
             nSub.updateStatus( mes );
         }
-    }
-    
-    // Update the connection's IP address and retry connection
-    @Override
-    public void updateComputer( Computer data ) {
-    
     }
 }

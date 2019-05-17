@@ -13,7 +13,6 @@ public class Message implements Serializable {
 
     // The data objects I'm more concerned about.
     private String[] info = null;
-    //private byte[] img = null;
     private Icon img = null;
     private Macro macro = null;
     private String primaryCommand, secondayCommand = "";

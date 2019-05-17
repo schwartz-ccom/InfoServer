@@ -1,7 +1,7 @@
 package server.ui;
 
 import res.Out;
-import server.data.Computer;
+import server.types.Computer;
 import server.data.DataHandler;
 import server.data.EmailHandler;
 import server.data.MousePositionHandler;
@@ -21,7 +21,6 @@ import java.awt.event.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.DecimalFormat;
-import java.util.HashMap;
 
 /**
  * App handles the user interface, as well as action events
@@ -413,6 +412,10 @@ public class App implements MacroSubscriber, ComputerSubscriber {
         JButton btnTakeMacro = new JButton( "Unload" );
         cs.gridx = 1;
         btnTakeMacro.addActionListener( actionEvent -> {
+
+            if ( listLoadedMacros.getSelectedIndex() == -1 )
+                return;
+
             // Create the message
             Message m = new Message( "REVOKE MACRO" );
             m.setSecondayCommand( listLoadedMacros.getSelectedValue() );
@@ -468,6 +471,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
                 String address = InetAddress.getByName( name ).getHostAddress();
                 Computer c = new Computer( name, address );
                 DataHandler.getInstance().addComputer( c );
+                c.setDataComputer();
 
             } catch ( UnknownHostException e ) {
                 JOptionPane.showMessageDialog( frm, "Could not find host named " + name );
@@ -730,6 +734,7 @@ public class App implements MacroSubscriber, ComputerSubscriber {
 
     /**
      * Called when a new Macro is added
+     *
      * @param macros The list of Macros
      */
     @Override

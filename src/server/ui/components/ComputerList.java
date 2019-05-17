@@ -1,14 +1,12 @@
 package server.ui.components;
 
-import server.data.Computer;
+import server.types.Computer;
 import server.data.ComputerAdder;
 import server.data.DataHandler;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
 import java.util.ArrayList;
 
 /**
