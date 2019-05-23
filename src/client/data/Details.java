@@ -4,6 +4,7 @@ import res.Out;
 
 import com.sun.management.OperatingSystemMXBean;
 
+import java.awt.*;
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
@@ -21,6 +22,9 @@ public class Details {
     private OperatingSystemMXBean bean;
     private File cDrive = new File( "C:\\" );
 
+    // Quick one off info vars
+    private Dimension size;
+
     // Formatting vars
     private DecimalFormat decFormat = new DecimalFormat( "##.##" );
     private SimpleDateFormat sdf;
@@ -33,6 +37,8 @@ public class Details {
 
         String format = "HH:mm:ss";
         sdf = new SimpleDateFormat( format );
+
+        size = Toolkit.getDefaultToolkit().getScreenSize();
     }
 
     /**
@@ -43,7 +49,7 @@ public class Details {
     public String[] getDetails() {
 
         // Create an array with 13 slots
-        String[] toFill = new String[ 13 ];
+        String[] toFill = new String[ 15 ];
 
         // Have we connected successfully?
         toFill[ 0 ] = "YES";
@@ -90,6 +96,11 @@ public class Details {
             toFill[ 11 ] = String.valueOf( cDrive.getTotalSpace() );
             toFill[ 12 ] = String.valueOf( cDrive.getFreeSpace() );
         }
+
+        // Computer screen size ( for macro edit pane )
+        toFill[ 13 ] = String.valueOf( size.width );
+        toFill[ 14 ] = String.valueOf( size.height );
+
         return toFill;
     }
 

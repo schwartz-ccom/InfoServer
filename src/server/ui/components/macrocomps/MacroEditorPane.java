@@ -1,5 +1,6 @@
 package server.ui.components.macrocomps;
 
+import server.data.DataHandler;
 import server.ui.components.macrocomps.events.MouseEventHandler;
 
 import javax.swing.*;
@@ -24,7 +25,10 @@ public class MacroEditorPane extends JFrame {
         setVisible( true );
 
         // Initialize the mouse listener
-        MouseEventHandler meh = new MouseEventHandler( this );
+        MouseEventHandler meh = new MouseEventHandler(
+                this,
+                DataHandler.getInstance().getCurrentComputer().getScreenSize()
+        );
 
         // Attach our custom mouse handler
         addMouseListener( meh );

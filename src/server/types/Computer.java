@@ -34,6 +34,7 @@ public class Computer extends JLabel {
 
     private String compName;
     private String compIp;
+    private Dimension scrSize;
     private String[] details;
 
     // Construct the JLabel for the Computer
@@ -102,11 +103,17 @@ public class Computer extends JLabel {
         this.details = s;
         this.compName = details[ 2 ];
 
+        this.scrSize = new Dimension( Integer.valueOf( details[ 13 ] ), Integer.valueOf( details[ 14 ] ) );
+
         this.setText( compName );
     }
 
     public String[] getDetails() {
         return this.details;
+    }
+
+    public Dimension getScreenSize(){
+        return this.scrSize;
     }
 
     public String getComputerName() {

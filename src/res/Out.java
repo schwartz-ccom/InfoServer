@@ -11,7 +11,7 @@ import java.util.Date;
  */
 public class Out {
 
-    private static boolean time = true;
+    private static boolean time = false;
 
     public static void printInfo( String classId, String msg ){
         if ( !time )
