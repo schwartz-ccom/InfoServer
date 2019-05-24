@@ -34,8 +34,12 @@ public class Computer extends JLabel {
 
     private String compName;
     private String compIp;
-    private Dimension scrSize;
     private String[] details;
+
+    // Screen sizing
+    private Dimension scrSize;
+    private Dimension sixteennine = new Dimension( 1280, 720 );
+    private Dimension sixteenten = new Dimension( 1280, 800 );
 
     // Construct the JLabel for the Computer
     public Computer( String name, String IP ) {
@@ -114,6 +118,18 @@ public class Computer extends JLabel {
 
     public Dimension getScreenSize(){
         return this.scrSize;
+    }
+    public Dimension getReducedScreenSize(){
+
+        // If the screen is 16:9
+        if ( scrSize.width / scrSize.height == ( 16 / 9 ) ) {
+            Out.printInfo( getClass().getSimpleName(), "Aspect Ratio: 16:9" );
+            return sixteennine;
+        }
+        else {
+            Out.printInfo( getClass().getSimpleName(), "Aspect Ratio: 16:10" );
+            return sixteenten;
+        }
     }
 
     public String getComputerName() {

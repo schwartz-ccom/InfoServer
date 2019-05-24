@@ -13,26 +13,42 @@ public class MacroEditorPane extends JFrame {
         // Call super with the title of the frame
         super( "Macro Editor" );
 
+        Dimension editorSize;
+        Dimension screenSizeForAdjustments;
+
         // Set up local formatting variables
-        Dimension editorSize = new Dimension( 1240, 720 );
+        // This should only be null if we're running the macro pane on it's own for testing
+        if ( DataHandler.getInstance().getCurrentComputer() == null ) {
+            editorSize = new Dimension( 1280, 720 );
+            screenSizeForAdjustments = new Dimension( 1920, 1080 );
+        }
+        else {
+            editorSize = DataHandler.getInstance().getCurrentComputer().getReducedScreenSize();
+            screenSizeForAdjustments = DataHandler.getInstance().getCurrentComputer().getScreenSize();
+        }
 
         // Frame settings
         setSize( editorSize );
         setDefaultCloseOperation( JFrame.DISPOSE_ON_CLOSE );
-        setLayout( new BorderLayout( 4, 4 ) );
+        setLayout( new BorderLayout() );
         setResizable( false );
+
+        // Make the JLabel to update the computer's image on.
+        JLabel lblComputerScreen = new JLabel( "blargh" );
+        add( lblComputerScreen, BorderLayout.CENTER );
 
         setVisible( true );
 
         // Initialize the mouse listener
+
         MouseEventHandler meh = new MouseEventHandler(
-                this,
-                DataHandler.getInstance().getCurrentComputer().getScreenSize()
+                lblComputerScreen,
+                screenSizeForAdjustments
         );
 
         // Attach our custom mouse handler
-        addMouseListener( meh );
-        addMouseMotionListener( meh );
+        lblComputerScreen.addMouseListener( meh );
+        lblComputerScreen.addMouseMotionListener( meh );
     }
     public static void main( String [] args ){
         new MacroEditorPane();

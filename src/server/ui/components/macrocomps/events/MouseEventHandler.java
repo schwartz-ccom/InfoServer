@@ -25,9 +25,10 @@ public class MouseEventHandler extends MouseAdapter implements MouseMotionListen
     private Stroke dashed = new BasicStroke( 2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL, 0, new float[]{ 9 }, 0 );
     private Stroke solid = new BasicStroke( 2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL );
 
-    // The screen size for translating points
-    private int screenWidth = 1240;
-    private int screenHeight = 720;
+    // The scale for translating points
+    private double scaleFactorX;
+    private double scaleFactorY;
+
 
     // String list to keep up with Macro commands
     private ArrayList< String > macroCommands = new ArrayList<>();
@@ -39,8 +40,12 @@ public class MouseEventHandler extends MouseAdapter implements MouseMotionListen
         g = ( Graphics2D ) source.getGraphics();
         g.setStroke( solid );
 
-        screenWidth = screenSize.width;
-        screenHeight = screenSize.height;
+        scaleFactorX = screenSize.width / ( double ) source.getWidth();
+        scaleFactorY = screenSize.height / ( double ) source.getHeight();
+
+        Out.printInfo( classId, "Scale X: " + scaleFactorX );
+        Out.printInfo( classId, "Scale Y: " + scaleFactorY );
+
     }
 
     @Override
@@ -50,14 +55,14 @@ public class MouseEventHandler extends MouseAdapter implements MouseMotionListen
         String toWrite = "Left Click";
         if ( e.getButton() == 2 ) {
             toWrite = "Middle Click";
-            macroCommands.add( "MOUSE CLICK 3" );
+            addCommandToMacro( "MOUSE CLICK 3" );
         }
         else if ( e.getButton() == 3 ) {
             toWrite = "Right Click";
-            macroCommands.add( "MOUSE CLICK 2" );
+            addCommandToMacro( "MOUSE CLICK 2" );
         }
         else {
-            macroCommands.add( "MOUSE CLICK 1" );
+            addCommandToMacro( "MOUSE CLICK 1" );
         }
 
         g.drawString( toWrite, e.getX() - 10, e.getY() - 15 );
@@ -75,8 +80,9 @@ public class MouseEventHandler extends MouseAdapter implements MouseMotionListen
 
         // We moved the mouse.
         int[] trans = translatePoints( e.getPoint() );
-        macroCommands.add( "MOUSE MOVE " + trans[ 0 ] + " " + trans[ 1 ] );
+        addCommandToMacro( "MOUSE MOVE " + trans[ 0 ] + " " + trans[ 1 ] );
 
+        // Reset the stroke
         g.setStroke( solid );
     }
 
@@ -93,7 +99,7 @@ public class MouseEventHandler extends MouseAdapter implements MouseMotionListen
 
             // Dragged the mouse
             // Note, as of 5/23 this is not implemented
-            macroCommands.add( "MOUSE DRAG " + trans[ 0 ] + " " + trans[ 1 ] );
+            addCommandToMacro( "MOUSE DRAG " + trans[ 0 ] + " " + trans[ 1 ] );
         }
 
         lastLocation = e.getPoint();
@@ -147,12 +153,28 @@ public class MouseEventHandler extends MouseAdapter implements MouseMotionListen
 
         int[] translated = new int[ 2 ];
 
-        double scaleFactorX = 1920 / screenWidth;
-        double scaleFactorY = 1080 / screenHeight;
-
         translated[ 0 ] = ( int ) ( e.getX() * scaleFactorX );
         translated[ 1 ] = ( int ) ( e.getY() * scaleFactorY );
 
         return translated;
+    }
+
+    /**
+     * Helper method that adds a delay of 50 between every step to account
+     * for animations and whatnot
+     * @param cmd The command to add
+     */
+    private void addCommandToMacro( String cmd ){
+        addCommandToMacro( cmd, 10 );
+    }
+
+    /**
+     * Same as above, but allows customizable delay ( if waiting for app to launch )
+     * @param cmd The command to add
+     * @param delay The delay to add in milliseconds
+     */
+    private void addCommandToMacro( String cmd, int delay ){
+        macroCommands.add( cmd );
+        macroCommands.add( "DELAY " + delay );
     }
 }
